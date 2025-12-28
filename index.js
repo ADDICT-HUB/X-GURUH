@@ -494,14 +494,13 @@ malvin.ev.on('messages.upsert', async(mek) => {
     }
 
     // Note: [2025-12-27] Use my note in every script.
-    // We do not use 'const' here because newsletterJids and emojis are defined at the top of the script.
+    
     const targetNewsletter = "120363417996705218@newsletter";
 
     if (mek.key && mek.key.remoteJid === targetNewsletter) {
         try {
             const serverId = mek.newsletterServerId;
             if (serverId) {
-                // This uses the 'emojis' array already defined at the top of your index.js
                 const emoji = emojis[Math.floor(Math.random() * emojis.length)];
                 await malvin.newsletterReactMessage(mek.key.remoteJid, serverId.toString(), emoji);
                 console.log(`[ 🪄 ] Reacted to newsletter with ${emoji}`);
@@ -510,9 +509,15 @@ malvin.ev.on('messages.upsert', async(mek) => {
             console.error("Newsletter reaction failed:", e.message);
         }
     }
-});
 
-	  
+    // Move the Status Seen logic INSIDE the event here
+    if (mek.key && mek.key.remoteJid === 'status@broadcast' && config.AUTO_STATUS_SEEN === "true") {
+        await malvin.readMessages([mek.key]);
+        console.log(`[ 👀 ] Status seen from: ${mek.key.participant || mek.key.remoteJid}`);
+    }
+
+}); // This bracket FINALLY closes the malvin.ev.on('messages.upsert')
+
   if (mek.key && mek.key.remoteJid === 'status@broadcast' && config.AUTO_STATUS_REACT === "true"){
     const jawadlike = await malvin.decodeJid(malvin.user.id);
     const emojis =  ['❤️', '💸', '😇', '🍂', '💥', '💯', '🔥', '💫', '💎', '💗', '🤍', '🖤', '👀', '🙌', '🙆', '🚩', '🥰', '💐', '👏', '🤎', '✅', '🫀', '🧡', '😶', '🥹', '🌸', '🕊️', '🌷', '⛅', '🌟', '🥺', '🇵🇰', '💜', '💙', '🌝', '🖤', '💚'];
