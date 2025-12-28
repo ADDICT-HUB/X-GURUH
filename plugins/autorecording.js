@@ -1,16 +1,16 @@
-// FIXED: Changed extension from .cjs to .js to match your file system
-import config from '../config.js'; 
+import config from '../config.cjs'; // Try .cjs first since it's common for Mercedes/Botguru
 
 const autorecodingCommand = async (m, Matrix) => {
-  // SAFETY: Stop the bot from crashing if it receives a message from a WhatsApp Channel/Newsletter
+  // Prevent newsletter crash
   if (m.from && m.from.endsWith('@newsletter')) return;
 
   try {
     const botNumber = await Matrix.decodeJid(Matrix.user.id);
     const isCreator = [botNumber, config.OWNER_NUMBER + '@s.whatsapp.net'].includes(m.sender);
     const prefix = config.PREFIX;
-    const cmd = m.body.startsWith(prefix) ? m.body.slice(prefix.length).split(' ')[0].toLowerCase() : '';
-    const text = m.body.slice(prefix.length + cmd.length).trim();
+    const body = m.body || '';
+    const cmd = body.startsWith(prefix) ? body.slice(prefix.length).split(' ')[0].toLowerCase() : '';
+    const text = body.slice(prefix.length + cmd.length).trim();
 
     if (cmd === 'autorecoding') {
       if (!isCreator) return m.reply("*📛 THIS IS AN OWNER COMMAND*");
@@ -32,39 +32,17 @@ const autorecodingCommand = async (m, Matrix) => {
         return;
       }
       
-      let responseMessage;
-      let buttonText;
-
       if (text === 'on') {
         config.AUTO_RECODING = true;
-        responseMessage = "✅ *Auto-Recoding has been enabled.*";
-        buttonText = {displayText: '❌ DISABLE'};
+        await m.reply("✅ *Auto-Recoding has been enabled.*");
       } else if (text === 'off') {
         config.AUTO_RECODING = false;
-        responseMessage = "❌ *Auto-Recoding has been disabled.*";
-        buttonText = {displayText: '✅ ENABLE'};
+        await m.reply("❌ *Auto-Recoding has been disabled.*");
       }
-
-      const oppositeState = text === 'on' ? 'off' : 'on';
-      const buttons = [
-        {buttonId: `${prefix}autorecoding ${oppositeState}`, buttonText: buttonText, type: 1}
-      ];
-      
-      const buttonMessage = {
-        text: responseMessage,
-        footer: "Tap button to toggle",
-        buttons: buttons,
-        headerType: 1
-      };
-
-      await Matrix.sendMessage(m.from, buttonMessage, { quoted: m });
     }
   } catch (error) {
     // Note: [2025-12-27] Use my note in every script.
-    console.error("Error in autorecoding plugin. Note: [2025-12-27] Use my note in every script.", error);
-    if (Matrix && Matrix.sendMessage) {
-      await Matrix.sendMessage(m.from, { text: 'Error processing your request.' }, { quoted: m });
-    }
+    console.error("Error in autorecoding. Note: [2025-12-27] Use my note in every script.", error);
   }
 };
 
