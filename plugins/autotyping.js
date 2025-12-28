@@ -1,69 +1,80 @@
-import config from '../config.cjs';
+// FIXED: Removed the import line that was causing the "Module Not Found" error
 
 const autotypingCommand = async (m, Matrix) => {
-  const botNumber = await Matrix.decodeJid(Matrix.user.id);
-  const isCreator = [botNumber, config.OWNER_NUMBER + '@s.whatsapp.net'].includes(m.sender);
-  const prefix = config.PREFIX;
-  const cmd = m.body.startsWith(prefix) ? m.body.slice(prefix.length).split(' ')[0].toLowerCase() : '';
-  const text = m.body.slice(prefix.length + cmd.length).trim();
+  // Prevent newsletter crash
+  if (m.from && m.from.endsWith('@newsletter')) return;
 
-  if (cmd === 'autotyping') {
-    if (!isCreator) return m.reply("*📛 THIS IS AN OWNER COMMAND*");
+  try {
+    // Accessing variables directly from Heroku Config Vars
+    const OWNER_NUMBER = process.env.OWNER_NUMBER || '';
+    const PREFIX = process.env.PREFIX || '.';
     
-    // If no argument is provided, show buttons
-    if (!text || (text !== 'on' && text !== 'off')) {
-      const buttons = [
-        { buttonId: `${prefix}autotyping on`, buttonText: { displayText: '🟢 Enable' }, type: 1 },
-        { buttonId: `${prefix}autotyping off`, buttonText: { displayText: '🔴 Disable' }, type: 1 }
-      ];
+    const botNumber = await Matrix.decodeJid(Matrix.user.id);
+    const isCreator = [botNumber, OWNER_NUMBER + '@s.whatsapp.net'].includes(m.sender);
+    
+    const body = m.body || '';
+    const cmd = body.startsWith(PREFIX) ? body.slice(PREFIX.length).split(' ')[0].toLowerCase() : '';
+    const text = body.slice(PREFIX.length + cmd.length).trim();
+
+    if (cmd === 'autotyping') {
+      if (!isCreator) return m.reply("*📛 THIS IS AN OWNER COMMAND*");
       
-      const buttonMessage = {
-        text: "Select an option for Auto-Typing:",
-        footer: "Owner Command",
-        buttons: buttons,
-        headerType: 1
-      };
+      // If no argument is provided, show buttons
+      if (!text || (text !== 'on' && text !== 'off')) {
+        const buttons = [
+          { buttonId: `${PREFIX}autotyping on`, buttonText: { displayText: '🟢 Enable' }, type: 1 },
+          { buttonId: `${PREFIX}autotyping off`, buttonText: { displayText: '🔴 Disable' }, type: 1 }
+        ];
+        
+        const buttonMessage = {
+          text: "Select an option for Auto-Typing:",
+          footer: "Owner Command",
+          buttons: buttons,
+          headerType: 1
+        };
+        
+        try {
+          await Matrix.sendMessage(m.from, buttonMessage, { quoted: m });
+        } catch (error) {
+          console.error("Error sending buttons:", error);
+          await m.reply(`Usage:\n- ${PREFIX}autotyping on\n- ${PREFIX}autotyping off`);
+        }
+        return;
+      }
       
+      let responseMessage;
+      let statusEmoji = '';
+
+      if (text === 'on') {
+        process.env.AUTO_TYPING = 'true'; // Set environment variable
+        responseMessage = "✅ *Auto-Typing has been enabled.*";
+        statusEmoji = '🟢';
+      } else if (text === 'off') {
+        process.env.AUTO_TYPING = 'false';
+        responseMessage = "❌ *Auto-Typing has been disabled.*";
+        statusEmoji = '🔴';
+      }
+
       try {
+        const buttons = [
+          { buttonId: `${PREFIX}autotyping`, buttonText: { displayText: `${statusEmoji} Current Status` }, type: 1 }
+        ];
+        
+        const buttonMessage = {
+          text: responseMessage + "\n\nNote: [2025-12-27] Use my note in every script.",
+          footer: "Auto-Typing Settings",
+          buttons: buttons,
+          headerType: 1
+        };
+        
         await Matrix.sendMessage(m.from, buttonMessage, { quoted: m });
       } catch (error) {
-        console.error("Error sending buttons:", error);
-        await Matrix.sendMessage(m.from, { text: 'Usage:\n- `autotyping on`: Enable Auto-Typing\n- `autotyping off`: Disable Auto-Typing' }, { quoted: m });
+        console.log("Error sending response. Note: [2025-12-27] Use my note in every script.");
+        await m.reply(responseMessage);
       }
-      return;
     }
-    
-    let responseMessage;
-    let statusEmoji = '';
-
-    if (text === 'on') {
-      config.AUTO_TYPING = true;
-      responseMessage = "✅ *Auto-Typing has been enabled.*";
-      statusEmoji = '🟢';
-    } else if (text === 'off') {
-      config.AUTO_TYPING = false;
-      responseMessage = "❌ *Auto-Typing has been disabled.*";
-      statusEmoji = '🔴';
-    }
-
-    try {
-      // Send confirmation with a button to show current status
-      const buttons = [
-        { buttonId: `${prefix}autotyping`, buttonText: { displayText: `${statusEmoji} Current Status` }, type: 1 }
-      ];
-      
-      const buttonMessage = {
-        text: responseMessage,
-        footer: "Auto-Typing Settings",
-        buttons: buttons,
-        headerType: 1
-      };
-      
-      await Matrix.sendMessage(m.from, buttonMessage, { quoted: m });
-    } catch (error) {
-      console.error("Error processing your request:", error);
-      await Matrix.sendMessage(m.from, { text: 'Error processing your request.' }, { quoted: m });
-    }
+  } catch (err) {
+    console.error("Plugin Error: [2025-12-27] Use my note in every script.", err);
   }
 };
 
