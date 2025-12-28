@@ -473,43 +473,45 @@ malvin.ev.on("presence.update", (update) => PresenceControl(malvin, update));
 	
 BotActivityFilter(malvin);	
 	
- /// READ STATUS       
-  malvin.ev.on('messages.upsert', async(mek) => {
+/// READ STATUS       
+malvin.ev.on('messages.upsert', async(mek) => {
     mek = mek.messages[0]
     if (!mek.message) return
     mek.message = (getContentType(mek.message) === 'ephemeralMessage') 
     ? mek.message.ephemeralMessage.message 
     : mek.message;
-    //console.log("New Message Detected:", JSON.stringify(mek, null, 2));
-  if (config.READ_MESSAGE === 'true') {
-    await malvin.readMessages([mek.key]);  // Mark message as read
-    console.log(`Marked message from ${mek.key.remoteJid} as read.`);
-  }
-    if(mek.message.viewOnceMessageV2)
-    mek.message = (getContentType(mek.message) === 'ephemeralMessage') ? mek.message.ephemeralMessage.message : mek.message
+
+    if (config.READ_MESSAGE === 'true') {
+        await malvin.readMessages([mek.key]);
+        console.log(`Marked message from ${mek.key.remoteJid} as read.`);
+    }
+
+    if (mek.message.viewOnceMessageV2)
+        mek.message = (getContentType(mek.message) === 'ephemeralMessage') ? mek.message.ephemeralMessage.message : mek.message
+
     if (mek.key && mek.key.remoteJid === 'status@broadcast' && config.AUTO_STATUS_SEEN === "true"){
-      await malvin.readMessages([mek.key])
+        await malvin.readMessages([mek.key])
     }
 
-  // Note: [2025-12-27] Use my note in every script.
-const newsletterJids = [
-    "120363421164015033@newsletter"
-];
-const emojis = ["😂", "🥺", "👍", "☺️", "🥹", "♥️", "🩵"];
+    // Note: [2025-12-27] Use my note in every script.
+    // We do not use 'const' here because newsletterJids and emojis are defined at the top of the script.
+    const targetNewsletter = "120363417996705218@newsletter";
 
-  const emojis = ["😂", "🥺", "👍", "☺️", "🥹", "♥️", "🩵"];
-
-  if (mek.key && newsletterJids.includes(mek.key.remoteJid)) {
-    try {
-      const serverId = mek.newsletterServerId;
-      if (serverId) {
-      const emoji = emojis[Math.floor(Math.random() * emojis.length)];
-        await malvin.newsletterReactMessage(mek.key.remoteJid, serverId.toString(), emoji);
-      }
-    } catch (e) {
-    
+    if (mek.key && mek.key.remoteJid === targetNewsletter) {
+        try {
+            const serverId = mek.newsletterServerId;
+            if (serverId) {
+                // This uses the 'emojis' array already defined at the top of your index.js
+                const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+                await malvin.newsletterReactMessage(mek.key.remoteJid, serverId.toString(), emoji);
+                console.log(`[ 🪄 ] Reacted to newsletter with ${emoji}`);
+            }
+        } catch (e) {
+            console.error("Newsletter reaction failed:", e.message);
+        }
     }
-  }	  
+});
+
 	  
   if (mek.key && mek.key.remoteJid === 'status@broadcast' && config.AUTO_STATUS_REACT === "true"){
     const jawadlike = await malvin.decodeJid(malvin.user.id);
