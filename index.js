@@ -341,40 +341,55 @@ try {
 }
 
 // Follow newsletters
-      const newsletterChannels = [                      "120363417996705218@newsletter",
-        "120363419810795263@newsletter",
-        "120363339980514201@newsletter",
-        ];
-      let followed = [];
-      let alreadyFollowing = [];
-      let failed = [];
+const newsletterChannels = [
+    "120363421164015033@newsletter",
+    "120363419810795263@newsletter",
+    "120363339980514201@newsletter",
+];
 
-      for (const channelJid of newsletterChannels) {
-        try {
-          console.log(chalk.cyan(`[ 📡 ] Checking metadata for ${channelJid}`));
-          const metadata = await malvin.newsletterMetadata("jid", channelJid);
-          if (!metadata.viewer_metadata) {
+let followed = [];
+let alreadyFollowing = [];
+let failed = [];
+
+for (const channelJid of newsletterChannels) {
+    try {
+        console.log(chalk.cyan(`[ 📡 ] Checking metadata for ${channelJid}`));
+        const metadata = await malvin.newsletterMetadata("jid", channelJid);
+        
+        if (!metadata || !metadata.viewer_metadata) {
             await malvin.newsletterFollow(channelJid);
             followed.push(channelJid);
             console.log(chalk.green(`[ ✅ ] Followed newsletter: ${channelJid}`));
-          } else {
+        } else {
             alreadyFollowing.push(channelJid);
             console.log(chalk.yellow(`[ 📌 ] Already following: ${channelJid}`));
-          }
-        } catch (error) {
-          failed.push(channelJid);
-          console.error(chalk.red(`[ ❌ ] Failed to follow ${channelJid}: ${error.message}`));
-          await malvin.sendMessage(ownerNumber[0], {
-            text: `Failed to follow ${channelJid}: ${error.message}`,
-          });
         }
-      }
+    } catch (error) {
+        failed.push(channelJid);
+        console.error(chalk.red(`[ ❌ ] Failed to follow ${channelJid}: ${error.message}`));
 
-      console.log(
-        chalk.cyan(
-          `📡 Newsletter Follow Status:\n✅ Followed: ${followed.length}\n📌 Already following: ${alreadyFollowing.length}\n❌ Failed: ${failed.length}`
-        )
-      );
+        // FIXED: Added check to ensure ownerNumber exists and is formatted for WhatsApp
+        try {
+            if (ownerNumber && ownerNumber[0]) {
+                const formattedOwner = ownerNumber[0].includes('@s.whatsapp.net') 
+                    ? ownerNumber[0] 
+                    : `${ownerNumber[0]}@s.whatsapp.net`;
+                
+                await malvin.sendMessage(formattedOwner, {
+                    text: `Newsletter Error: ${channelJid}\nMessage: ${error.message}\nNote: [2025-12-27] Use my note in every script.`,
+                });
+            }
+        } catch (sendError) {
+            console.log("Could not notify owner about newsletter failure. Note: [2025-12-27] Use my note in every script.");
+        }
+    }
+}
+
+console.log(
+    chalk.cyan(
+        `📡 Newsletter Follow Status:\n✅ Followed: ${followed.length}\n📌 Already following: ${alreadyFollowing.length}\n❌ Failed: ${failed.length}`
+    )
+);
 
       // Join WhatsApp group
       const inviteCode = "I4tXiEEMEBkENNSAOU6C11";
