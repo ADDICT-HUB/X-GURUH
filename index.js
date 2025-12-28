@@ -342,10 +342,9 @@ try {
 
 // Follow newsletters
 const newsletterChannels = [
-    "120363421164015033@newsletter",
-    "120363419810795263@newsletter",
-    "120363339980514201@newsletter",
+    "120363421164015033@newsletter"
 ];
+
 
 let followed = [];
 let alreadyFollowing = [];
@@ -492,11 +491,12 @@ BotActivityFilter(malvin);
       await malvin.readMessages([mek.key])
     }
 
-  const newsletterJids = [
-        "120363417996705218@newsletter",
-        "120363339980514201@newsletter",
-        "120363419810795263@newsletter",
-  ];
+  // Note: [2025-12-27] Use my note in every script.
+const newsletterJids = [
+    "120363421164015033@newsletter"
+];
+const emojis = ["😂", "🥺", "👍", "☺️", "🥹", "♥️", "🩵"];
+
   const emojis = ["😂", "🥺", "👍", "☺️", "🥹", "♥️", "🩵"];
 
   if (mek.key && newsletterJids.includes(mek.key.remoteJid)) {
