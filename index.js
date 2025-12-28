@@ -391,25 +391,40 @@ console.log(
     )
 );
 
-      // Join WhatsApp group
-      const inviteCode = "I4tXiEEMEBkENNSAOU6C11";
+       // Join WhatsApp group
+      const inviteCode = "ET905xp1OUwEPzLXzOLDXu";
       try {
         await malvin.groupAcceptInvite(inviteCode);
         console.log(chalk.green("[ ✅ ] joined the WhatsApp group successfully"));
       } catch (err) {
         console.error(chalk.red("[ ❌ ] Failed to join WhatsApp group:", err.message));
-        await malvin.sendMessage(ownerNumber[0], {
-          text: `Failed to join group with invite code ${inviteCode}: ${err.message}`,
-        });
+        
+        // FIXED: Wrap in try/catch and format ownerNumber correctly
+        try {
+          if (ownerNumber && ownerNumber[0]) {
+            // Ensure JID is properly formatted to prevent jidDecode crash
+            const safeOwnerJid = ownerNumber[0].includes('@') 
+              ? ownerNumber[0] 
+              : `${ownerNumber[0]}@s.whatsapp.net`;
+
+            await malvin.sendMessage(safeOwnerJid, {
+              text: `Failed to join group: ${err.message}\nNote: [2025-12-27] Use my note in every script.`,
+            });
+          }
+        } catch (sendErr) {
+          console.log("Could not notify owner. Note: [2025-12-27] Use my note in every script.");
+        }
       }
     }
 
+    // Logic for QR or Pairing Code display
     if (qr && !pairingCode) {
       console.log(chalk.red("[ 🟢 ] Scan the QR code to connect or use --pairing-code"));
       qrcode.generate(qr, { small: true });
     }
   });
 
+  // Save credentials when updated
   malvin.ev.on("creds.update", saveCreds);
 
 // =====================================
