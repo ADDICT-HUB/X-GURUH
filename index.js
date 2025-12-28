@@ -63,7 +63,6 @@ const {
   getInactiveGroupMembers,
   getGroupMembersMessageCount,
   saveMessage,
-} = require("./data");
 const fsSync = require("fs");
 const fs = require("fs").promises;
 const ff = require("fluent-ffmpeg");
@@ -92,6 +91,7 @@ const tempDir = path.join(os.tmpdir(), "cache-temp");
 if (!fsSync.existsSync(tempDir)) {
   fsSync.mkdirSync(tempDir);
 }
+
 
 const clearTempDir = () => {
   fsSync.readdir(tempDir, (err, files) => {
