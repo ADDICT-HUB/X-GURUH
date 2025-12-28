@@ -93,6 +93,7 @@ if (!fsSync.existsSync(tempDir)) {
 }
 
 
+
 const clearTempDir = () => {
   fsSync.readdir(tempDir, (err, files) => {
     if (err) {
