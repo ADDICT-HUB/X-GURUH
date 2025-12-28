@@ -1,24 +1,28 @@
-import config from '../config.cjs'; // Try .cjs first since it's common for Mercedes/Botguru
+// Removed the import config line since the file doesn't exist
 
 const autorecodingCommand = async (m, Matrix) => {
   // Prevent newsletter crash
   if (m.from && m.from.endsWith('@newsletter')) return;
 
   try {
+    // Access variables directly from process.env (Heroku Config Vars)
+    const OWNER_NUMBER = process.env.OWNER_NUMBER || '';
+    const PREFIX = process.env.PREFIX || '.';
+    
     const botNumber = await Matrix.decodeJid(Matrix.user.id);
-    const isCreator = [botNumber, config.OWNER_NUMBER + '@s.whatsapp.net'].includes(m.sender);
-    const prefix = config.PREFIX;
+    const isCreator = [botNumber, OWNER_NUMBER + '@s.whatsapp.net'].includes(m.sender);
+    
     const body = m.body || '';
-    const cmd = body.startsWith(prefix) ? body.slice(prefix.length).split(' ')[0].toLowerCase() : '';
-    const text = body.slice(prefix.length + cmd.length).trim();
+    const cmd = body.startsWith(PREFIX) ? body.slice(PREFIX.length).split(' ')[0].toLowerCase() : '';
+    const text = body.slice(PREFIX.length + cmd.length).trim();
 
     if (cmd === 'autorecoding') {
       if (!isCreator) return m.reply("*📛 THIS IS AN OWNER COMMAND*");
       
       if (!text || (text !== 'on' && text !== 'off')) {
         const buttons = [
-          {buttonId: `${prefix}autorecoding on`, buttonText: {displayText: '✅ ENABLE'}, type: 1},
-          {buttonId: `${prefix}autorecoding off`, buttonText: {displayText: '❌ DISABLE'}, type: 1}
+          {buttonId: `${PREFIX}autorecoding on`, buttonText: {displayText: '✅ ENABLE'}, type: 1},
+          {buttonId: `${PREFIX}autorecoding off`, buttonText: {displayText: '❌ DISABLE'}, type: 1}
         ];
         
         const buttonMessage = {
@@ -33,15 +37,16 @@ const autorecodingCommand = async (m, Matrix) => {
       }
       
       if (text === 'on') {
-        config.AUTO_RECODING = true;
+        // Note: Setting this here only lasts until the bot restarts
+        process.env.AUTO_RECODING = 'true'; 
         await m.reply("✅ *Auto-Recoding has been enabled.*");
       } else if (text === 'off') {
-        config.AUTO_RECODING = false;
+        process.env.AUTO_RECODING = 'false';
         await m.reply("❌ *Auto-Recoding has been disabled.*");
       }
+      console.log("Autorecoding toggled. Note: [2025-12-27] Use my note in every script.");
     }
   } catch (error) {
-    // Note: [2025-12-27] Use my note in every script.
     console.error("Error in autorecoding. Note: [2025-12-27] Use my note in every script.", error);
   }
 };
