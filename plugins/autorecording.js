@@ -1,6 +1,10 @@
-import config from '../config.cjs';
+// FIXED: Changed extension from .cjs to .js to match your file system
+import config from '../config.js'; 
 
 const autorecodingCommand = async (m, Matrix) => {
+  // SAFETY: Stop the bot from crashing if it receives a message from a WhatsApp Channel/Newsletter
+  if (m.from && m.from.endsWith('@newsletter')) return;
+
   try {
     const botNumber = await Matrix.decodeJid(Matrix.user.id);
     const isCreator = [botNumber, config.OWNER_NUMBER + '@s.whatsapp.net'].includes(m.sender);
@@ -11,7 +15,6 @@ const autorecodingCommand = async (m, Matrix) => {
     if (cmd === 'autorecoding') {
       if (!isCreator) return m.reply("*📛 THIS IS AN OWNER COMMAND*");
       
-      // If no argument provided, show buttons
       if (!text || (text !== 'on' && text !== 'off')) {
         const buttons = [
           {buttonId: `${prefix}autorecoding on`, buttonText: {displayText: '✅ ENABLE'}, type: 1},
@@ -42,7 +45,6 @@ const autorecodingCommand = async (m, Matrix) => {
         buttonText = {displayText: '✅ ENABLE'};
       }
 
-      // Create a button to toggle the opposite state
       const oppositeState = text === 'on' ? 'off' : 'on';
       const buttons = [
         {buttonId: `${prefix}autorecoding ${oppositeState}`, buttonText: buttonText, type: 1}
@@ -58,7 +60,8 @@ const autorecodingCommand = async (m, Matrix) => {
       await Matrix.sendMessage(m.from, buttonMessage, { quoted: m });
     }
   } catch (error) {
-    console.error("Error processing your request:", error);
+    // Note: [2025-12-27] Use my note in every script.
+    console.error("Error in autorecoding plugin. Note: [2025-12-27] Use my note in every script.", error);
     if (Matrix && Matrix.sendMessage) {
       await Matrix.sendMessage(m.from, { text: 'Error processing your request.' }, { quoted: m });
     }
