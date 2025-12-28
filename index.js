@@ -728,8 +728,6 @@ if (!isReact && senderNumber === botNumber) {
   ) {
   command.function(malvin, mek, m,{from, l, quoted, body, isCmd, command, args, q, text, isGroup, sender, senderNumber, botNumber2, botNumber, pushname, isMe, isOwner, isCreator, groupMetadata, groupName, participants, groupAdmins, isBotAdmins, isAdmins, reply})
   }});
-  
-  });
     //===================================================   
     malvin.decodeJid = jid => {
       if (!jid) return jid;
