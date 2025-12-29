@@ -385,37 +385,20 @@ try {
       }
     }
   });
-
 malvin.ev.on('call', async (calls) => {
   try {
     if (config.ANTI_CALL !== 'true') return;
     for (const call of calls) {
       if (call.status !== 'offer') continue;
       const id = call.id;
-      const from = call.from;
+      const from = call.from;  // This 'from' is DIFFERENT - it's the caller's ID
       await malvin.rejectCall(id, from);
       await malvin.sendMessage(from, { text: config.REJECT_MSG || '*вυѕу ¢αℓℓ ℓαтєя*' });
     }
   } catch (err) {
     console.error("Anti-call error:", err);
   }
-});	
-	
-malvin.ev.on('presence.update', async (update) => {
-    await PresenceControl(malvin, update);
 });
-
-malvin.ev.on("presence.update", (update) => PresenceControl(malvin, update));
-
-BotActivityFilter(malvin);	
-	
-  malvin.ev.on('messages.upsert', async(mek) => {
-    mek = mek.messages[0];
-if (!mek.message) return;
-
-// Declare variables that will be used
-let type = getContentType(mek.message);
-let from = mek.key.remoteJid;
 // ... rest of your code
     mek.message = (getContentType(mek.message) === 'ephemeralMessage') 
     ? mek.message.ephemeralMessage.message 
