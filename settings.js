@@ -24,25 +24,25 @@ module.exports = {
   BAILEYS: process.env.BAILEYS || "@whiskeysockets/baileys",
 
   // ===== OWNER & DEVELOPER SETTINGS =====
-  OWNER_NUMBER: settings.OWNER_NUMBER || process.env.OWNER_NUMBER || "254116284050",
+  OWNER_NUMBER: settings.OWNER_NUMBER || process.env.OWNER_NUMBER || "254704355518",
   OWNER_NAME: getConfig("OWNER_NAME") || process.env.OWNER_NAME || "GURU",
-  DEV: process.env.DEV || "254116284050",
-  DEVELOPER_NUMBER: '254116284050@s.whatsapp.net',
+  DEV: process.env.DEV || "254704355518",
+  DEVELOPER_NUMBER: '254704355518@s.whatsapp.net',
   
   // ===== AUDIO & MEDIA =====
   MENU_AUDIO_URL: getConfig("MENU_AUDIO_URL") || process.env.MENU_AUDIO_URL || 'https://files.catbox.moe/qiml76.mp3',
   AUDIO_URL: getConfig("AUDIO_URL") || process.env.AUDIO_URL || 'https://files.catbox.moe/qiml76.mp3',
   AUDIO_URL2: getConfig("AUDIO_URL2") || process.env.AUDIO_URL2 || 'https://files.catbox.moe/qiml76.mp3',
   
-  NEWSLETTER_JID: process.env.NEWSLETTER_JID || '120363417996705218@newsletter',
+  NEWSLETTER_JID: process.env.NEWSLETTER_JID || '120363421164015033@newsletter',
 
   // ===== AUTO-RESPONSE SETTINGS =====
-  AUTO_REPLY: "true",
-  AUTO_STATUS_REPLY: "true",
+  AUTO_REPLY: "false",
+  AUTO_STATUS_REPLY: "false",
   AUTO_STATUS_MSG: "*Just seen ur status 😆 🤖*",
   READ_MESSAGE: "true",
   REJECT_MSG: "*📵 Calls are not allowed on this number unless you have permission. 🚫*",
-  ALIVE_IMG: "https://files.catbox.moe/rz7kac.jpg",
+  ALIVE_IMG: "https://files.catbox.moe/atpgij.jpg",
   LIVE_MSG: "> ʙᴏᴛ ɪs sᴘᴀʀᴋɪɴɢ ᴀᴄᴛɪᴠᴇ ᴀɴᴅ ᴀʟɪᴠᴇ\n> ɢɪᴛʜᴜʙ : github.com/ADDICT-HUB/Botguru",
 
   // ===== REACTION & STICKER SETTINGS =====
@@ -57,7 +57,7 @@ module.exports = {
   AUTO_RECORDING: "true",
   AUTO_TYPING: "true",
   MENTION_REPLY: "true",
-  MENU_IMAGE_URL: "https://files.catbox.moe/rz7kac.jpg",
+  MENU_IMAGE_URL: "https://files.catbox.moe/atpgij.jpg",
 
   // ===== SECURITY & ANTI-FEATURES =====
   ANTI_DELETE: "true",
