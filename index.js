@@ -76,7 +76,6 @@ const util = require("util");
 const { sms, downloadMediaMessage, AntiDelete } = require("./lib");
 const FileType = require("file-type");
 const { File } = require("megajs");
-const { fromBuffer } = require("file-type");
 const bodyparser = require("body-parser");
 const chalk = require("chalk");
 const os = require("os");
@@ -130,7 +129,7 @@ async function loadSession() {
       return null;
     }
 
-    if (config.SESSION_ID.startsWith("Xguru~")) {
+ else if (config.SESSION_ID.startsWith("MEGA~"))
       console.log(chalk.yellow("[ ⏳ ] Decoding base64 session..."));
       const base64Data = config.SESSION_ID.replace("Xguru~", "");
       if (!/^[A-Za-z0-9+/=]+$/.test(base64Data)) {
@@ -260,11 +259,19 @@ async function connectToWA() {
       // Load plugins
       const pluginPath = path.join(__dirname, "plugins");
       try {
-        fsSync.readdirSync(pluginPath).forEach((plugin) => {
-          if (path.extname(plugin).toLowerCase() === ".js") {
-            require(path.join(pluginPath, plugin));
-          }
-        });
+        const pluginPath = path.join(__dirname, "plugins");
+
+for (const plugin of fsSync.readdirSync(pluginPath)) {
+  if (!plugin.endsWith(".js")) continue;
+
+  try {
+    require(path.join(pluginPath, plugin));
+    console.log(`✅ Loaded plugin: ${plugin}`);
+  } catch (err) {
+    console.error(`❌ Failed plugin: ${plugin}`);
+    console.error(err.message);
+  }
+}
         console.log(chalk.green("[ ✅ ] Plugins loaded successfully"));
       } catch (err) {
         console.error(chalk.red("[ ❌ ] Error loading plugins:", err.message));
@@ -840,7 +847,7 @@ if (!isReact && senderNumber === botNumber) {
       let res
       let data = Buffer.isBuffer(PATH) ? PATH : /^data:.*?\/.*?;base64,/i.test(PATH) ? Buffer.from(PATH.split `,` [1], 'base64') : /^https?:\/\//.test(PATH) ? await (res = await getBuffer(PATH)) : fs.existsSync(PATH) ? (filename = PATH, fs.readFileSync(PATH)) : typeof PATH === 'string' ? PATH : Buffer.alloc(0)
           //if (!Buffer.isBuffer(data)) throw new TypeError('Result is not a buffer')
-      let type = await FileType.fromBuffer(data) || {
+      let type = await FileType.fileTypeFromBuffer(buffer)(data) || {
           mime: 'application/octet-stream',
           ext: '.bin'
       }
@@ -1141,7 +1148,9 @@ app.use(express.static(path.join(__dirname, "lib")));
 app.get("/", (req, res) => {
   res.redirect("/marisel.html");
 });
-app.listen(port, () =>
+app.listen(port, () => {
+  console.log(`🌐 Server running on port ${port}`);
+});
   console.log(chalk.cyan(`
 ╭──[ hello user ]─
 │🤗 hi your bot is live 
