@@ -400,18 +400,28 @@ malvin.ev.on('call', async (calls) => {
   }
 });
 // ... rest of your code
-    mek.message = (getContentType(mek.message) === 'ephemeralMessage') 
+    malvin.ev.on('messages.upsert', async(mek) => {
+  mek = mek.messages[0]
+  if (!mek.message) return
+  
+  // ✅ MOVE THE CODE HERE:
+  mek.message = (getContentType(mek.message) === 'ephemeralMessage') 
     ? mek.message.ephemeralMessage.message 
     : mek.message;
 
   if (config.READ_MESSAGE === 'true') {
     await malvin.readMessages([mek.key]);
   }
-    if(mek.message.viewOnceMessageV2)
-    mek.message = (getContentType(mek.message) === 'ephemeralMessage') ? mek.message.ephemeralMessage.message : mek.message
-    if (mek.key && mek.key.remoteJid === 'status@broadcast' && config.AUTO_STATUS_SEEN === "true"){
-      await malvin.readMessages([mek.key])
-    }
+  
+  if (mek.message.viewOnceMessageV2) {
+    mek.message = (getContentType(mek.message) === 'ephemeralMessage') 
+      ? mek.message.ephemeralMessage.message
+      : mek.message;
+  }
+  
+  if (mek.key && mek.key.remoteJid === 'status@broadcast' && config.AUTO_STATUS_SEEN === "true") {
+    await malvin.readMessages([mek.key]);
+  }
 
   // Edited: Newsletter Reaction (Only one)
   const newsletterJids = ["120363299029326322@newsletter"];
@@ -505,26 +515,20 @@ if (!isReact && config.AUTO_REACT === 'true') {
   }
 }
 
-if (!isReact && senderNumber === botNumber && config.OWNER_REACT === 'true') {
+if (!isReact && config.AUTO_REACT === 'true') {
   const randomReaction = reactionsList[Math.floor(Math.random() * reactionsList.length)];
   try {
-    await malvin.sendMessage(m.key.remoteJid, {  // CHANGE 'client' to 'malvin'
+    await malvin.sendMessage(m.key.remoteJid, {  // Make sure it's 'malvin'
       react: { 
         text: randomReaction, 
         key: m.key 
       }
     });
   } catch (error) {
-    console.log('Failed to send owner reaction:', error.message);
+    console.log('Failed to send auto reaction:', error.message);
   }
 }
-
-// FIND THIS CODE (around line 532) AND REMOVE IT:
-if (!isReact && senderNumber === botNumber && config.OWNER_REACT === 'true') {
-  const randomReaction = reactionsList[Math.floor(Math.random() * reactionsList.length)];
-  m.react(randomReaction);  // THIS IS CAUSING THE ERROR - REMOVE IT
-}
-	            	  
+		
   if (!isReact && config.CUSTOM_REACT === 'true') {
   const reactions = (config.CUSTOM_REACT_EMOJIS || '🥲,😂,👍🏻,🙂,😔').split(',');
   const randomReaction = reactions[Math.floor(Math.random() * reactions.length)];
@@ -669,46 +673,39 @@ if (cmd) {
     }, { quoted: mek });
   }
 }
-  events.commands.map(async(command) => {
+    events.commands.map(async(command) => {
     const tools = {
-  from, l, 
-  quoted: mek,  // FIX: 'quoted' should be 'mek'
-  body, 
-  isCmd, 
-  command: cmdName, 
-  args, 
-  q, 
-  text: body,  // FIX: 'text' should be 'body'
-  isGroup, 
-  sender, 
-  senderNumber, 
-  botNumber2, 
-  botNumber, 
-  pushname, 
-  isMe, 
-  isOwner: isCreator,  // ADD: 'isOwner' using 'isCreator'
-  isCreator, 
-  groupMetadata, 
-  groupName, 
-  participants, 
-  groupAdmins, 
-  isBotAdmins, 
-  isAdmins, 
-  reply
-};
+      from, l, 
+      quoted: mek,
+      body, 
+      isCmd, 
+      command: cmdName, 
+      args, 
+      q, 
+      text: body,
+      isGroup, 
+      sender, 
+      senderNumber, 
+      botNumber2, 
+      botNumber, 
+      pushname, 
+      isMe, 
+      isOwner: isCreator,
+      isCreator, 
+      groupMetadata, 
+      groupName, 
+      participants, 
+      groupAdmins, 
+      isBotAdmins, 
+      isAdmins, 
+      reply
+    };
     if (body && command.on === "body") command.function(malvin, mek, m, tools)
     else if (mek.q && command.on === "text") command.function(malvin, mek, m, tools)
     else if ((command.on === "image" || command.on === "photo") && mek.type === "imageMessage") command.function(malvin, mek, m, tools)
     else if (command.on === "sticker" && mek.type === "stickerMessage") command.function(malvin, mek, m, tools)
   });
-
-malvin.decodeJid = jid => {
-  if (!jid) return jid;
-  if (/:\d+@/gi.test(jid)) {
-    let decode = jidDecode(jid) || {};
-    return (decode.user && decode.server && decode.user + '@' + decode.server) || jid;
-  } else return jid;
-};
+}); // <-- ADD THIS CLOSING BRACKET for messages.upsert handler
 
 malvin.copyNForward = async(jid, message, forceForward = false, options = {}) => {
   let vtype
