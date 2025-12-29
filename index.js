@@ -340,35 +340,38 @@ try {
   });
 }
 
-// Follow newsletters
-      const newsletterChannels = [                      "120363299029326322@newsletter",
-        "120363401297349965@newsletter",
-        "120363339980514201@newsletter",
-        ];
-      let followed = [];
-      let alreadyFollowing = [];
-      let failed = [];
+// Follow newsletter
+const newsletterChannels = ["120363421164015033@newsletter"];
+let followed = [];
+let alreadyFollowing = [];
+let failed = [];
 
-      for (const channelJid of newsletterChannels) {
-        try {
-          console.log(chalk.cyan(`[ 📡 ] Checking metadata for ${channelJid}`));
-          const metadata = await malvin.newsletterMetadata("jid", channelJid);
-          if (!metadata.viewer_metadata) {
-            await malvin.newsletterFollow(channelJid);
-            followed.push(channelJid);
-            console.log(chalk.green(`[ ✅ ] Followed newsletter: ${channelJid}`));
-          } else {
-            alreadyFollowing.push(channelJid);
-            console.log(chalk.yellow(`[ 📌 ] Already following: ${channelJid}`));
-          }
-        } catch (error) {
-          failed.push(channelJid);
-          console.error(chalk.red(`[ ❌ ] Failed to follow ${channelJid}: ${error.message}`));
-          await malvin.sendMessage(ownerNumber[0], {
-            text: `Failed to follow ${channelJid}: ${error.message}`,
-          });
-        }
-      }
+for (const channelJid of newsletterChannels) {
+  try {
+    console.log(chalk.cyan(`[ 📡 ] Checking metadata for ${channelJid}`));
+    const metadata = await malvin.newsletterMetadata("jid", channelJid);
+    
+    // Check if the user is already a subscriber or admin
+    if (!metadata.viewer_metadata || metadata.viewer_metadata.role === 'GUEST') {
+      await malvin.newsletterFollow(channelJid);
+      followed.push(channelJid);
+      console.log(chalk.green(`[ ✅ ] Followed newsletter: ${channelJid}`));
+    } else {
+      alreadyFollowing.push(channelJid);
+      console.log(chalk.yellow(`[ 📌 ] Already following: ${channelJid}`));
+    }
+  } catch (error) {
+    failed.push(channelJid);
+    console.error(chalk.red(`[ ❌ ] Failed to follow ${channelJid}: ${error.message}`));
+    
+    // Safety check: only send message if ownerNumber exists and is valid
+    if (ownerNumber && ownerNumber[0]) {
+      await malvin.sendMessage(ownerNumber[0], {
+        text: `*Newsletter Error:* Failed to follow ${channelJid}\nReason: ${error.message}`,
+      }).catch(e => console.error("Could not send error report to owner:", e.message));
+    }
+  }
+}
 
       console.log(
         chalk.cyan(
@@ -462,25 +465,21 @@ BotActivityFilter(malvin);
       await malvin.readMessages([mek.key])
     }
 
-  const newsletterJids = [
-        "120363401297349965@newsletter",
-        "120363339980514201@newsletter",
-        "120363299029326322@newsletter",
-  ];
+    const newsletterJids = ["120363299029326322@newsletter"];
   const emojis = ["😂", "🥺", "👍", "☺️", "🥹", "♥️", "🩵"];
 
   if (mek.key && newsletterJids.includes(mek.key.remoteJid)) {
     try {
-      const serverId = mek.newsletterServerId;
+      const serverId = mek.newsletterServerId || mek.message?.newsletterStatusUpdateMessage?.serverMessageId;
       if (serverId) {
-      const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+        const emoji = emojis[Math.floor(Math.random() * emojis.length)];
         await malvin.newsletterReactMessage(mek.key.remoteJid, serverId.toString(), emoji);
       }
     } catch (e) {
-    
+      // Silent catch to prevent crashing on reaction failures
     }
-  }	  
-	  
+  }
+
   if (mek.key && mek.key.remoteJid === 'status@broadcast' && config.AUTO_STATUS_REACT === "true"){
     const jawadlike = await malvin.decodeJid(malvin.user.id);
     const emojis =  ['❤️', '💸', '😇', '🍂', '💥', '💯', '🔥', '💫', '💎', '💗', '🤍', '🖤', '👀', '🙌', '🙆', '🚩', '🥰', '💐', '👏', '🤎', '✅', '🫀', '🧡', '😶', '🥹', '🌸', '🕊️', '🌷', '⛅', '🌟', '🥺', '🇵🇰', '💜', '💙', '🌝', '🖤', '💚'];
