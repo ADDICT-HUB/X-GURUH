@@ -668,52 +668,134 @@ if (cmd) {
       groupName, 
       participants, 
       groupAdmins, 
-      isBotAdmins, 
-      isAdmins, 
-      reply
-    });
-  } catch (e) { 
-    console.error("[PLUGIN ERROR] " + e); 
-    // Send error to user
-    await malvin.sendMessage(from, {
-      text: `❌ Error: ${e.message}`
-    }, { quoted: mek });
-  }
-}
-    events.commands.map(async(command) => {
-    const tools = {
-      from, l, 
-      quoted: mek,
-      body, 
-      isCmd, 
-      command: cmdName, 
-      args, 
-      q, 
-      text: body,
-      isGroup, 
-      sender, 
-      senderNumber, 
-      botNumber2, 
-      botNumber, 
-      pushname, 
-      isMe, 
-      isOwner: isCreator,
-      isCreator, 
-      groupMetadata, 
-      groupName, 
-      participants, 
-      groupAdmins, 
-      isBotAdmins, 
-      isAdmins, 
-      reply
-    };
-    if (body && command.on === "body") command.function(malvin, mek, m, tools)
-    else if (mek.q && command.on === "text") command.function(malvin, mek, m, tools)
-    else if ((command.on === "image" || command.on === "photo") && mek.type === "imageMessage") command.function(malvin, mek, m, tools)
-    else if (command.on === "sticker" && mek.type === "stickerMessage") command.function(malvin, mek, m, tools)
-  });
-}); // <-- ADD THIS CLOSING BRACKET for messages.upsert handler
+console.log('📦 EVENTS DEBUG:');
+console.log('- hasCommands:', Array.isArray(events.commands));
+console.log('- commandCount:', events.commands?.length || 0);
+console.log('- firstFewCommands:', events.commands?.slice(0, 3)?.map(c => c.pattern || c.alias?.[0]) || []);
 
+// ONLY check for commands if we should process this message
+if (isCmd && cmdName) {
+  console.log('🎯 COMMAND DETECTION:');
+  console.log('- Is command?', isCmd);
+  console.log('- Command name:', cmdName);
+  console.log('- Args:', args);
+  console.log('- Prefix used:', prefix);
+  console.log('- Full command string:', body);
+  
+  // FIND THE COMMAND
+  const cmd = events.commands.find((c) => 
+    c.pattern === cmdName || 
+    (c.alias && c.alias.includes(cmdName))
+  );
+
+  if (cmd) {
+    console.log(`✅ Command found: ${cmdName}`);
+    
+    if (cmd.react) {
+      try {
+        await malvin.sendMessage(from, { react: { text: cmd.react, key: mek.key }});
+      } catch (error) {
+        console.log('Failed to send command reaction:', error.message);
+      }
+    }
+    
+    try {
+      // FIX: Add missing 'isOwner' variable
+      const isOwner = isCreator; // or define properly based on your logic
+      
+      await cmd.function(malvin, mek, m, {
+        from, 
+        quoted: mek,
+        body, 
+        isCmd, 
+        command: cmdName, 
+        args, 
+        q, 
+        text: body,
+        isGroup, 
+        sender, 
+        senderNumber, 
+        botNumber2, 
+        botNumber, 
+        pushname, 
+        isMe, 
+        isOwner,  // ADDED
+        isCreator, 
+        groupMetadata, 
+        groupName, 
+        participants, 
+        groupAdmins, 
+        isBotAdmins, 
+        isAdmins, 
+        reply
+      });
+      console.log(`✅ Command executed successfully: ${cmdName}`);
+    } catch (e) { 
+      console.error("[PLUGIN ERROR] " + e); 
+      console.error("Stack:", e.stack);
+      
+      // Send error to user
+      try {
+        await malvin.sendMessage(from, {
+          text: `❌ Error executing command: ${e.message}`
+        }, { quoted: mek });
+      } catch (sendError) {
+        console.error("Failed to send error message:", sendError.message);
+      }
+    }
+  } else {
+    console.log(`❌ Command not found: ${cmdName}`);
+    // Optional: Send "command not found" message
+    // await malvin.sendMessage(from, { text: `❌ Command not found: ${cmdName}` }, { quoted: mek });
+  }
+} else {
+  console.log('📭 Not a command or no command name');
+}
+
+// This should come BEFORE command detection in your code structure:
+events.commands.map(async(command) => {
+  const tools = {
+    from, l, 
+    quoted: mek,
+    body, 
+    isCmd, 
+    command: cmdName, 
+    args, 
+    q, 
+    text: body,
+    isGroup, 
+    sender, 
+    senderNumber, 
+    botNumber2, 
+    botNumber, 
+    pushname, 
+    isMe, 
+    isOwner: isCreator,
+    isCreator, 
+    groupMetadata, 
+    groupName, 
+    participants, 
+    groupAdmins, 
+    isBotAdmins, 
+    isAdmins, 
+    reply
+  };
+  
+  if (body && command.on === "body") {
+    console.log(`🔄 Processing command.on="body": ${command.pattern || command.alias?.[0]}`);
+    await command.function(malvin, mek, m, tools);
+  } else if (mek.q && command.on === "text") {
+    console.log(`🔄 Processing command.on="text": ${command.pattern || command.alias?.[0]}`);
+    await command.function(malvin, mek, m, tools);
+  } else if ((command.on === "image" || command.on === "photo") && mek.type === "imageMessage") {
+    console.log(`🔄 Processing command.on="image": ${command.pattern || command.alias?.[0]}`);
+    await command.function(malvin, mek, m, tools);
+  } else if (command.on === "sticker" && mek.type === "stickerMessage") {
+    console.log(`🔄 Processing command.on="sticker": ${command.pattern || command.alias?.[0]}`);
+    await command.function(malvin, mek, m, tools);
+  }
+});
+	  
 malvin.copyNForward = async(jid, message, forceForward = false, options = {}) => {
   let vtype
   if (options.readViewOnce) {
