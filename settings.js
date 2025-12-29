@@ -47,7 +47,7 @@ module.exports = {
 
   // ===== REACTION & STICKER SETTINGS =====
   AUTO_REACT: "false",
-  OWNER_REACT: "true",
+  OWNER_REACT: "false",
   CUSTOM_REACT: "false",
   CUSTOM_REACT_EMOJIS: "💝,💖,💗,❤️‍🩹,❤️,🧡,💛,💚,💙,💜,🤎,🖤,🤍",
   STICKER_NAME: "BOT GURU",
