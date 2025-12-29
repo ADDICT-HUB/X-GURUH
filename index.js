@@ -577,29 +577,40 @@ const ownerFile = JSON.parse(fsSync.readFileSync("./lib/sudo.json", "utf-8"));
 const ownerNumberFormatted = `${config.OWNER_NUMBER}@s.whatsapp.net`;
 const isRealOwner = sender === ownerNumberFormatted || isMe || ownerFile.includes(sender);
 
-// DEBUG LOGGING ADDED HERE
-console.log('🔍 USER CHECK:');
+// DEBUG: Show current mode and access
+console.log('🔧 MODE & ACCESS DEBUG:');
 console.log('- Sender:', sender);
-console.log('- Is me?', isMe);
+console.log('- Is me (bot)?', isMe);
 console.log('- Is real owner?', isRealOwner);
+console.log('- Owner number from config:', config.OWNER_NUMBER);
+console.log('- Owner number formatted:', ownerNumberFormatted);
 console.log('- Config MODE:', config.MODE);
 console.log('- Is group?', isGroup);
 console.log('- Body starts with prefix?', body?.startsWith?.(prefix));
-console.log('- Full body:', body);
+console.log('- Body:', body);
 
-if (!isRealOwner && config.MODE === "private") {
-  console.log('🚫 MODE=private, non-owner blocked');
-  return;
+// FIXED LOGIC: Always allow owner, check MODE for others
+if (isRealOwner) {
+  console.log('✅ Owner access granted (always allowed)');
+  // Owner can always use commands, skip MODE checks
+} else {
+  console.log('👤 Non-owner detected, checking MODE...');
+  
+  // Check MODE for non-owners only
+  if (config.MODE === "private") {
+    console.log('🚫 MODE=private, non-owner blocked');
+    return;
+  }
+  if (config.MODE === "inbox" && isGroup) {
+    console.log('🚫 MODE=inbox, group message from non-owner blocked');
+    return;
+  }
+  if (config.MODE === "groups" && !isGroup) {
+    console.log('🚫 MODE=groups, private message from non-owner blocked');
+    return;
+  }
+  console.log('✅ Non-owner access granted (allowed by MODE)');
 }
-if (!isRealOwner && isGroup && config.MODE === "inbox") {
-  console.log('🚫 MODE=inbox, group message from non-owner blocked');
-  return;
-}
-if (!isRealOwner && !isGroup && config.MODE === "groups") {
-  console.log('🚫 MODE=groups, private message from non-owner blocked');
-  return;
-}
-
 // LOAD EVENTS (REMOVE DUPLICATE LINE)
 const events = require('./malvin');
 
