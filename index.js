@@ -220,19 +220,19 @@ async function connectWithPairing(malvin, useMobile) {
   });
   const question = (text) => new Promise((resolve) => rl.question(text, resolve));
 
-  async function askNumber() {
-  const numberInput = await question(chalk.cyan("» Enter your number (e.g., +254740007567): "));
-  const number = numberInput.replace(/[^0-9]/g, ""); // Keep only digits
-  rl.close();
+  async function startBot() {
+    const numberInput = await question(chalk.cyan("» Enter your number (e.g., +254740007567): "));
+    const number = numberInput.replace(/[^0-9]/g, "");
+    rl.close();
 
-  console.log("Your number is:", number);
+    // Now you can safely use await
+    let code = await malvin.requestPairingCode(number);
+    console.log("Pairing code:", code);
 
-  // Continue with the rest of your code that uses 'number'
-  // e.g., startBot(number);
+    // Continue with the rest of your bot logic
 }
 
-// Call the async function
-askNumber();
+startBot(); // call the async function
 
   if (!number) {
     console.error(chalk.red("❌ No phone number provided"));
