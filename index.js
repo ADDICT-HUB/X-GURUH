@@ -440,17 +440,17 @@ BotActivityFilter(malvin);
     } catch (e) {}
   }	  
 	  
-  if (mek.key && mek.key.remoteJid === 'status@broadcast' && config.AUTO_STATUS_REACT === "true"){
-    const jawadlike = await malvin.decodeJid(malvin.user.id);
-    const statusEmojis =  ['❤️', '💸', '😇', '🍂', '💥', '💯', '🔥', '💫', '💎', '💗', '🤍', '🖤', '👀', '🙌', '🙆', '🚩', '🥰', '💐', '👏', '🤎', '✅', '🫀', '🧡', '😶', '🥹', '🌸', '🕊️', '🌷', '⛅', '🌟', '🥺', '🇵🇰', '💜', '💙', '🌝', '🖤', '💚'];
-    const randomEmoji = statusEmojis[Math.floor(Math.random() * statusEmojis.length)];
-    await malvin.sendMessage(mek.key.remoteJid, { react: { text: randomEmoji, key: mek.key } }, { statusJidList: [mek.key.participant, jawadlike] });
-  }                       
-  if (mek.key && mek.key.remoteJid === 'status@broadcast' && config.AUTO_STATUS_REPLY === "true"){
-    const user = mek.key.participant
-    const text = `${config.AUTO_STATUS_MSG}`
-    await malvin.sendMessage(user, { text: text, react: { text: '💜', key: mek.key } }, { quoted: mek })
-  }
+if (mek.key && mek.key.remoteJid === 'status@broadcast' && config.AUTO_STATUS_REACT === "true"){
+  const jawadlike = await malvin.decodeJid(malvin.user.id);
+  const statusEmojis =  ['❤️', '💸', '😇', '🍂', '💥', '💯', '🔥', '💫', '💎', '💗', '🤍', '🖤', '👀', '🙌', '🙆', '🚩', '🥰', '💐', '👏', '🤎', '✅', '🫀', '🧡', '😶', '🥹', '🌸', '🕊️', '🌷', '⛅', '🌟', '🥺', '🇵🇰', '💜', '💙', '🌝', '🖤', '💚'];
+  const randomEmoji = statusEmojis[Math.floor(Math.random() * statusEmojis.length)];
+  await malvin.sendMessage(mek.key.remoteJid, { react: { text: randomEmoji, key: mek.key } }, { statusJidList: [mek.key.participant, jawadlike] });
+}
+if (mek.key && mek.key.remoteJid === 'status@broadcast' && config.AUTO_STATUS_REPLY === "true"){
+  const user = mek.key.participant
+  const text = `${config.AUTO_STATUS_MSG}`
+  await malvin.sendMessage(user, { text: text }, { quoted: mek })
+}
   await Promise.all([saveMessage(mek)]);
   
   const m = sms(malvin, mek)
@@ -513,10 +513,24 @@ if (!isReact && config.AUTO_REACT === 'true') {
   }
 }
 
+if (!isReact && config.AUTO_REACT === 'true') {
+  const randomReaction = reactionsList[Math.floor(Math.random() * reactionsList.length)];
+  try {
+    await malvin.sendMessage(m.key.remoteJid, {  // Changed from sock to malvin
+      react: { 
+        text: randomReaction, 
+        key: m.key 
+      }
+    });
+  } catch (error) {
+    console.log('Failed to send auto reaction:', error.message);
+  }
+}
+
 if (!isReact && senderNumber === botNumber && config.OWNER_REACT === 'true') {
   const randomReaction = reactionsList[Math.floor(Math.random() * reactionsList.length)];
   try {
-    await sock.sendMessage(m.key.remoteJid, {
+    await malvin.sendMessage(m.key.remoteJid, {  // Changed from client to malvin
       react: { 
         text: randomReaction, 
         key: m.key 
@@ -527,21 +541,56 @@ if (!isReact && senderNumber === botNumber && config.OWNER_REACT === 'true') {
   }
 }
 
-  if (!isReact && senderNumber === botNumber && config.OWNER_REACT === 'true') {
-    const randomReaction = reactionsList[Math.floor(Math.random() * reactionsList.length)];
-    m.react(randomReaction);
+if (!isReact && senderNumber === botNumber && config.OWNER_REACT === 'true') {
+  const randomReaction = reactionsList[Math.floor(Math.random() * reactionsList.length)];
+  try {
+    // Use 'client' instead of 'sock' since that's likely your WhatsApp connection
+    await client.sendMessage(m.key.remoteJid, {
+      react: { 
+        text: randomReaction, 
+        key: m.key 
+      }
+    });
+  } catch (error) {
+    console.log('Failed to send owner reaction:', error.message);
   }
+}
+
+// FIND THIS CODE (around line 532) AND REMOVE IT:
+if (!isReact && senderNumber === botNumber && config.OWNER_REACT === 'true') {
+  const randomReaction = reactionsList[Math.floor(Math.random() * reactionsList.length)];
+  m.react(randomReaction);  // THIS IS CAUSING THE ERROR - REMOVE IT
+}
 	            	  
   if (!isReact && config.CUSTOM_REACT === 'true') {
-    const reactions = (config.CUSTOM_REACT_EMOJIS || '🥲,😂,👍🏻,🙂,😔').split(',');
-    m.react(reactions[Math.floor(Math.random() * reactions.length)]);
+  const reactions = (config.CUSTOM_REACT_EMOJIS || '🥲,😂,👍🏻,🙂,😔').split(',');
+  const randomReaction = reactions[Math.floor(Math.random() * reactions.length)];
+  try {
+    await malvin.sendMessage(m.key.remoteJid, {
+      react: { 
+        text: randomReaction, 
+        key: m.key 
+      }
+    });
+  } catch (error) {
+    console.log('Failed to send custom reaction:', error.message);
   }
+}
 
-  if (!isReact && senderNumber === botNumber && config.HEART_REACT === 'true') {
-    const reactions = (config.CUSTOM_REACT_EMOJIS || '❤️,🧡,💛,💚,💚').split(',');
-    m.react(reactions[Math.floor(Math.random() * reactions.length)]);
+if (!isReact && senderNumber === botNumber && config.HEART_REACT === 'true') {
+  const reactions = (config.CUSTOM_REACT_EMOJIS || '❤️,🧡,💛,💚,💚').split(',');
+  const randomReaction = reactions[Math.floor(Math.random() * reactions.length)];
+  try {
+    await malvin.sendMessage(m.key.remoteJid, {
+      react: { 
+        text: randomReaction, 
+        key: m.key 
+      }
+    });
+  } catch (error) {
+    console.log('Failed to send heart reaction:', error.message);
   }
-        
+}
   const bannedUsers = JSON.parse(fsSync.readFileSync("./lib/ban.json", "utf-8"));
   if (bannedUsers.includes(sender)) return;
 
@@ -555,15 +604,18 @@ if (!isReact && senderNumber === botNumber && config.OWNER_REACT === 'true') {
 	  
   const events = require('./malvin')
   const cmdName = isCmd ? body.slice(1).trim().split(" ")[0].toLowerCase() : false;
-  if (isCmd) {
-    const cmd = events.commands.find((cmd) => cmd.pattern === (cmdName)) || events.commands.find((cmd) => cmd.alias && cmd.alias.includes(cmdName))
-    if (cmd) {
-      if (cmd.react) malvin.sendMessage(from, { react: { text: cmd.react, key: mek.key }})
-      try {
-        cmd.function(malvin, mek, m,{from, quoted, body, isCmd, command, args, q, text, isGroup, sender, senderNumber, botNumber2, botNumber, pushname, isMe, isOwner, isCreator, groupMetadata, groupName, participants, groupAdmins, isBotAdmins, isAdmins, reply});
-      } catch (e) { console.error("[PLUGIN ERROR] " + e); }
+if (cmd) {
+  if (cmd.react) {
+    try {
+      await malvin.sendMessage(from, { react: { text: cmd.react, key: mek.key }});
+    } catch (error) {
+      console.log('Failed to send command reaction:', error.message);
     }
   }
+  try {
+    cmd.function(malvin, mek, m,{from, quoted, body, isCmd, command, args, q, text, isGroup, sender, senderNumber, botNumber2, botNumber, pushname, isMe, isOwner, isCreator, groupMetadata, groupName, participants, groupAdmins, isBotAdmins, isAdmins, reply});
+  } catch (e) { console.error("[PLUGIN ERROR] " + e); }
+}
 
   events.commands.map(async(command) => {
     const tools = {from, l, quoted, body, isCmd, command, args, q, text, isGroup, sender, senderNumber, botNumber2, botNumber, pushname, isMe, isOwner, isCreator, groupMetadata, groupName, participants, groupAdmins, isBotAdmins, isAdmins, reply};
