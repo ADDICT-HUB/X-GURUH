@@ -513,20 +513,6 @@ if (!isReact && config.AUTO_REACT === 'true') {
   }
 }
 
-if (!isReact && config.AUTO_REACT === 'true') {
-  const randomReaction = reactionsList[Math.floor(Math.random() * reactionsList.length)];
-  try {
-    await malvin.sendMessage(m.key.remoteJid, {  // Changed from sock to malvin
-      react: { 
-        text: randomReaction, 
-        key: m.key 
-      }
-    });
-  } catch (error) {
-    console.log('Failed to send auto reaction:', error.message);
-  }
-}
-
 if (!isReact && senderNumber === botNumber && config.OWNER_REACT === 'true') {
   const randomReaction = reactionsList[Math.floor(Math.random() * reactionsList.length)];
   try {
@@ -604,6 +590,8 @@ if (!isReact && senderNumber === botNumber && config.HEART_REACT === 'true') {
 	  
   const events = require('./malvin')
   const cmdName = isCmd ? body.slice(1).trim().split(" ")[0].toLowerCase() : false;
+const cmd = events.commands.find((cmd) => cmd.pattern === (cmdName)) || events.commands.find((cmd) => cmd.alias && cmd.alias.includes(cmdName));
+
 if (cmd) {
   if (cmd.react) {
     try {
@@ -613,8 +601,10 @@ if (cmd) {
     }
   }
   try {
-    cmd.function(malvin, mek, m,{from, quoted, body, isCmd, command, args, q, text, isGroup, sender, senderNumber, botNumber2, botNumber, pushname, isMe, isOwner, isCreator, groupMetadata, groupName, participants, groupAdmins, isBotAdmins, isAdmins, reply});
-  } catch (e) { console.error("[PLUGIN ERROR] " + e); }
+    cmd.function(malvin, mek, m, {from, quoted, body, isCmd, command, args, q, text, isGroup, sender, senderNumber, botNumber2, botNumber, pushname, isMe, isOwner, isCreator, groupMetadata, groupName, participants, groupAdmins, isBotAdmins, isAdmins, reply});
+  } catch (e) { 
+    console.error("[PLUGIN ERROR] " + e); 
+  }
 }
 
   events.commands.map(async(command) => {
