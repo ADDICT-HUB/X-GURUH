@@ -125,45 +125,71 @@ if (!fsSync.existsSync(sessionDir)) {
 async function loadSession() {
   try {
     if (!config.SESSION_ID) {
-      console.log(chalk.red("No SESSION_ID provided - Falling back to QR or pairing code"));
+      console.log(
+        chalk.red("❌ No SESSION_ID provided - Falling back to QR or pairing code")
+      );
       return null;
     }
 
- else if (config.SESSION_ID.startsWith("MEGA~"))
+    // 🔹 BASE64 SESSION
+    if (config.SESSION_ID.startsWith("Xguru~")) {
       console.log(chalk.yellow("[ ⏳ ] Decoding base64 session..."));
-      const base64Data = config.SESSION_ID.replace("Xguru~", "");
+
+      const base64Data = config.SESSION_ID.replace("GURU~", "");
+
       if (!/^[A-Za-z0-9+/=]+$/.test(base64Data)) {
         throw new Error("Invalid base64 format in SESSION_ID");
       }
+
       const decodedData = Buffer.from(base64Data, "base64");
       let sessionData;
+
       try {
         sessionData = JSON.parse(decodedData.toString("utf-8"));
       } catch (error) {
-        throw new Error("Failed to parse decoded base64 session data: " + error.message);
+        throw new Error(
+          "Failed to parse decoded base64 session data: " + error.message
+        );
       }
+
       fsSync.writeFileSync(credsPath, decodedData);
-      console.log(chalk.green("[ ✅ ] Base64 session decoded and saved successfully"));
+      console.log(
+        chalk.green("[ ✅ ] Base64 session decoded and saved successfully")
+      );
       return sessionData;
-    } else if (config.SESSION_ID.startsWith("Xguru~")) {
+
+    // 🔹 MEGA.NZ SESSION
+    } else if (config.SESSION_ID.startsWith("MEGA~")) {
       console.log(chalk.yellow("[ ⏳ ] Downloading MEGA.nz session..."));
-      const megaFileId = config.SESSION_ID.replace("Xguru~", "");
+
+      const megaFileId = config.SESSION_ID.replace("MEGA~", "");
       const filer = File.fromURL(`https://mega.nz/file/${megaFileId}`);
+
       const data = await new Promise((resolve, reject) => {
         filer.download((err, data) => {
           if (err) reject(err);
           else resolve(data);
         });
       });
+
       fsSync.writeFileSync(credsPath, data);
       console.log(chalk.green("[ ✅ ] MEGA session downloaded successfully"));
       return JSON.parse(data.toString());
+
+    // 🔹 INVALID FORMAT
     } else {
-      throw new Error("Invalid SESSION_ID format. Use 'Xguru~' for base64 or 'Xguru~' for MEGA.nz");
+      throw new Error(
+        "Invalid SESSION_ID format. Use 'Xguru~' for base64 or 'MEGA~' for MEGA.nz"
+      );
     }
+
   } catch (error) {
-    console.error(chalk.red("❌ Error loading session:", error.message));
-    console.log(chalk.green("Will attempt QR code or pairing code login"));
+    console.error(
+      chalk.red("❌ Error loading session: " + error.message)
+    );
+    console.log(
+      chalk.green("➡ Falling back to QR code or pairing code login")
+    );
     return null;
   }
 }
@@ -172,10 +198,16 @@ async function connectWithPairing(malvin, useMobile) {
   if (useMobile) {
     throw new Error("Cannot use pairing code with mobile API");
   }
+
   if (!process.stdin.isTTY) {
-    console.error(chalk.red("❌ Cannot prompt for phone number in non-interactive environment"));
+    console.error(
+      chalk.red("❌ Cannot prompt for phone number in non-interactive environment")
+    );
     process.exit(1);
   }
+
+  // pairing logic continues here…
+}
 
   console.log(chalk.bgYellow.black(" ACTION REQUIRED "));
   console.log(chalk.green("┌" + "─".repeat(46) + "┐"));
