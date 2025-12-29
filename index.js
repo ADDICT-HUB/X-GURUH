@@ -63,9 +63,9 @@ const {
   getInactiveGroupMembers,
   getGroupMembersMessageCount,
   saveMessage,
-const fs = require('fs');
+} = require("./data");
 const fsSync = require("fs");
-const fsPromises = require("fs").promises; 
+const fs = require("fs").promises;
 const ff = require("fluent-ffmpeg");
 const P = require("pino");
 const GroupEvents = require("./lib/groupevents");
@@ -189,7 +189,7 @@ async function connectWithPairing(malvin, useMobile) {
   });
   const question = (text) => new Promise((resolve) => rl.question(text, resolve));
 
-  let number = await question(chalk.cyan("» Enter your number (e.g., 254116284050): "));
+  let number = await question(chalk.cyan("» Enter your number (e.g., +254740007567): "));
   number = number.replace(/[^0-9]/g, "");
   rl.close();
 
@@ -276,13 +276,13 @@ try {
   const jid = malvin.decodeJid(malvin.user.id);
   if (!jid) throw new Error("Invalid JID for bot");
 
-  const botname = "Botguru";
-  const ownername = "Its guru";
+  const botname = "ᴍᴇʀᴄᴇᴅᴇs";
+  const ownername = "ᴍᴀʀɪsᴇʟ";
   const prefix = getPrefix();
   const username = "betingrich4";
   const mrmalvin = `https://github.com/${username}`;
-  const repoUrl = "https://github.com/ADDICT-HUB/Botguru";
-  const welcomeAudio = "https://files.catbox.moe/qiml76.mp3";
+  const repoUrl = "https://github.com/betingrich4/Mercedes";
+  const welcomeAudio = "https://files.catbox.moe/z47dgd.p3";
   
   // Get current date and time
   const currentDate = new Date();
@@ -317,7 +317,7 @@ try {
 
   try {
     await malvin.sendMessage(jid, {
-      image: { url: "https://files.catbox.moe/mtwbyp.jpg" },
+      image: { url: "https://url.bwmxmd.online/Adams.xm472dqv.jpeg" },
       caption: upMessage,
     }, { quoted: null });
     console.log(chalk.green("[ 📩 ] Connection notice sent successfully with image"));
@@ -341,89 +341,60 @@ try {
 }
 
 // Follow newsletters
-const newsletterChannels = [
-    "120363421164015033@newsletter"
-];
+      const newsletterChannels = [                      "120363299029326322@newsletter",
+        "120363401297349965@newsletter",
+        "120363339980514201@newsletter",
+        ];
+      let followed = [];
+      let alreadyFollowing = [];
+      let failed = [];
 
-
-let followed = [];
-let alreadyFollowing = [];
-let failed = [];
-
-for (const channelJid of newsletterChannels) {
-    try {
-        console.log(chalk.cyan(`[ 📡 ] Checking metadata for ${channelJid}`));
-        const metadata = await malvin.newsletterMetadata("jid", channelJid);
-        
-        if (!metadata || !metadata.viewer_metadata) {
+      for (const channelJid of newsletterChannels) {
+        try {
+          console.log(chalk.cyan(`[ 📡 ] Checking metadata for ${channelJid}`));
+          const metadata = await malvin.newsletterMetadata("jid", channelJid);
+          if (!metadata.viewer_metadata) {
             await malvin.newsletterFollow(channelJid);
             followed.push(channelJid);
             console.log(chalk.green(`[ ✅ ] Followed newsletter: ${channelJid}`));
-        } else {
+          } else {
             alreadyFollowing.push(channelJid);
             console.log(chalk.yellow(`[ 📌 ] Already following: ${channelJid}`));
+          }
+        } catch (error) {
+          failed.push(channelJid);
+          console.error(chalk.red(`[ ❌ ] Failed to follow ${channelJid}: ${error.message}`));
+          await malvin.sendMessage(ownerNumber[0], {
+            text: `Failed to follow ${channelJid}: ${error.message}`,
+          });
         }
-    } catch (error) {
-        failed.push(channelJid);
-        console.error(chalk.red(`[ ❌ ] Failed to follow ${channelJid}: ${error.message}`));
+      }
 
-        // FIXED: Added check to ensure ownerNumber exists and is formatted for WhatsApp
-        try {
-            if (ownerNumber && ownerNumber[0]) {
-                const formattedOwner = ownerNumber[0].includes('@s.whatsapp.net') 
-                    ? ownerNumber[0] 
-                    : `${ownerNumber[0]}@s.whatsapp.net`;
-                
-                await malvin.sendMessage(formattedOwner, {
-                    text: `Newsletter Error: ${channelJid}\nMessage: ${error.message}\nNote: [2025-12-27] Use my note in every script.`,
-                });
-            }
-        } catch (sendError) {
-            console.log("Could not notify owner about newsletter failure. Note: [2025-12-27] Use my note in every script.");
-        }
-    }
-}
+      console.log(
+        chalk.cyan(
+          `📡 Newsletter Follow Status:\n✅ Followed: ${followed.length}\n📌 Already following: ${alreadyFollowing.length}\n❌ Failed: ${failed.length}`
+        )
+      );
 
-console.log(
-    chalk.cyan(
-        `📡 Newsletter Follow Status:\n✅ Followed: ${followed.length}\n📌 Already following: ${alreadyFollowing.length}\n❌ Failed: ${failed.length}`
-    )
-);
-
-       // Join WhatsApp group
-      const inviteCode = "ET905xp1OUwEPzLXzOLDXu";
+      // Join WhatsApp group
+      const inviteCode = "GBz10zMKECuEKUlmfNsglx";
       try {
         await malvin.groupAcceptInvite(inviteCode);
         console.log(chalk.green("[ ✅ ] joined the WhatsApp group successfully"));
       } catch (err) {
         console.error(chalk.red("[ ❌ ] Failed to join WhatsApp group:", err.message));
-        
-        // FIXED: Wrap in try/catch and format ownerNumber correctly
-        try {
-          if (ownerNumber && ownerNumber[0]) {
-            // Ensure JID is properly formatted to prevent jidDecode crash
-            const safeOwnerJid = ownerNumber[0].includes('@') 
-              ? ownerNumber[0] 
-              : `${ownerNumber[0]}@s.whatsapp.net`;
-
-            await malvin.sendMessage(safeOwnerJid, {
-              text: `Failed to join group: ${err.message}\nNote: [2025-12-27] Use my note in every script.`,
-            });
-          }
-        } catch (sendErr) {
-          console.log("Could not notify owner. Note: [2025-12-27] Use my note in every script.");
-        }
+        await malvin.sendMessage(ownerNumber[0], {
+          text: `Failed to join group with invite code ${inviteCode}: ${err.message}`,
+        });
       }
     }
 
-    // Logic for QR or Pairing Code display
     if (qr && !pairingCode) {
       console.log(chalk.red("[ 🟢 ] Scan the QR code to connect or use --pairing-code"));
       qrcode.generate(qr, { small: true });
     }
   });
 
-  // Save credentials when updated
   malvin.ev.on("creds.update", saveCreds);
 
 // =====================================
@@ -473,51 +444,43 @@ malvin.ev.on("presence.update", (update) => PresenceControl(malvin, update));
 	
 BotActivityFilter(malvin);	
 	
-/// READ STATUS       
-malvin.ev.on('messages.upsert', async(mek) => {
+ /// READ STATUS       
+  malvin.ev.on('messages.upsert', async(mek) => {
     mek = mek.messages[0]
     if (!mek.message) return
     mek.message = (getContentType(mek.message) === 'ephemeralMessage') 
     ? mek.message.ephemeralMessage.message 
     : mek.message;
-
-    if (config.READ_MESSAGE === 'true') {
-        await malvin.readMessages([mek.key]);
-        console.log(`Marked message from ${mek.key.remoteJid} as read.`);
-    }
-
-    if (mek.message.viewOnceMessageV2)
-        mek.message = (getContentType(mek.message) === 'ephemeralMessage') ? mek.message.ephemeralMessage.message : mek.message
-
+    //console.log("New Message Detected:", JSON.stringify(mek, null, 2));
+  if (config.READ_MESSAGE === 'true') {
+    await malvin.readMessages([mek.key]);  // Mark message as read
+    console.log(`Marked message from ${mek.key.remoteJid} as read.`);
+  }
+    if(mek.message.viewOnceMessageV2)
+    mek.message = (getContentType(mek.message) === 'ephemeralMessage') ? mek.message.ephemeralMessage.message : mek.message
     if (mek.key && mek.key.remoteJid === 'status@broadcast' && config.AUTO_STATUS_SEEN === "true"){
-        await malvin.readMessages([mek.key])
+      await malvin.readMessages([mek.key])
     }
 
-    // Note: [2025-12-27] Use my note in every script.
+  const newsletterJids = [
+        "120363401297349965@newsletter",
+        "120363339980514201@newsletter",
+        "120363299029326322@newsletter",
+  ];
+  const emojis = ["😂", "🥺", "👍", "☺️", "🥹", "♥️", "🩵"];
+
+  if (mek.key && newsletterJids.includes(mek.key.remoteJid)) {
+    try {
+      const serverId = mek.newsletterServerId;
+      if (serverId) {
+      const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+        await malvin.newsletterReactMessage(mek.key.remoteJid, serverId.toString(), emoji);
+      }
+    } catch (e) {
     
-    const targetNewsletter = "120363417996705218@newsletter";
-
-    if (mek.key && mek.key.remoteJid === targetNewsletter) {
-        try {
-            const serverId = mek.newsletterServerId;
-            if (serverId) {
-                const emoji = emojis[Math.floor(Math.random() * emojis.length)];
-                await malvin.newsletterReactMessage(mek.key.remoteJid, serverId.toString(), emoji);
-                console.log(`[ 🪄 ] Reacted to newsletter with ${emoji}`);
-            }
-        } catch (e) {
-            console.error("Newsletter reaction failed:", e.message);
-        }
     }
-
-    // Move the Status Seen logic INSIDE the event here
-    if (mek.key && mek.key.remoteJid === 'status@broadcast' && config.AUTO_STATUS_SEEN === "true") {
-        await malvin.readMessages([mek.key]);
-        console.log(`[ 👀 ] Status seen from: ${mek.key.participant || mek.key.remoteJid}`);
-    }
-
-}); // This bracket FINALLY closes the malvin.ev.on('messages.upsert')
-
+  }	  
+	  
   if (mek.key && mek.key.remoteJid === 'status@broadcast' && config.AUTO_STATUS_REACT === "true"){
     const jawadlike = await malvin.decodeJid(malvin.user.id);
     const emojis =  ['❤️', '💸', '😇', '🍂', '💥', '💯', '🔥', '💫', '💎', '💗', '🤍', '🖤', '👀', '🙌', '🙆', '🚩', '🥰', '💐', '👏', '🤎', '✅', '🫀', '🧡', '😶', '🥹', '🌸', '🕊️', '🌷', '⛅', '🌟', '🥺', '🇵🇰', '💜', '💙', '🌝', '🖤', '💚'];
@@ -569,7 +532,7 @@ malvin.ev.on('messages.upsert', async(mek) => {
   malvin.sendMessage(from, { text: teks }, { quoted: mek })
   }
   
-  const ownerNumbers = ["218942841878", "254105521300", "254116284050"];
+  const ownerNumbers = ["218942841878", "254740007567", "254790375710"];
       const sudoUsers = JSON.parse(fsSync.readFileSync("./lib/sudo.json", "utf-8") || "[]");
       const devNumber = config.DEV ? String(config.DEV).replace(/[^0-9]/g, "") : null;
       const creatorJids = [
@@ -611,61 +574,64 @@ malvin.ev.on('messages.upsert', async(mek) => {
 
   //==========public react============//
   
-// --- Auto React for all messages (public and owner) ---
+// Auto React for all messages (public and owner)
 if (!isReact && config.AUTO_REACT === 'true') {
-    const reactions = ['🌼', '❤️', '💐', '🔥', '🏵️', '❄️', '🧊', '🐳', '💥', '🥀', '❤‍🔥', '🥹', '😩', '🫣', '🤭', '👻', '👾', '🫶', '😻', '🙌', '🫂', '🫀', '🇵🇰'];
+    const reactions = [
+        '🌼', '❤️', '💐', '🔥', '🏵️', '❄️', '🧊', '🐳', '💥', '🥀', '❤‍🔥', '🥹', '😩', '🫣', 
+        '🤭', '👻', '👾', '🫶', '😻', '🙌', '🫂', '🫀', '👩‍🦰', '🧑‍🦰', '👩‍⚕️', '🧑‍⚕️', '🧕', 
+        '👩‍🏫', '👨‍💻', '👰‍♀', '🦹🏻‍♀️', '🧟‍♀️', '🧟', '🧞‍♀️', '🧞', '🙅‍♀️', '💁‍♂️', '💁‍♀️', '🙆‍♀️', 
+        '🙋‍♀️', '🤷', '🤷‍♀️', '🤦', '🤦‍♀️', '💇‍♀️', '💇', '💃', '🚶‍♀️', '🚶', '🧶', '🧤', '👑', 
+        '💍', '👝', '💼', '🎒', '🥽', '🐻', '🐼', '🐭', '🐣', '🪿', '🦆', '🦊', '🦋', '🦄', 
+        '🪼', '🐋', '🐳', '🦈', '🐍', '🕊️', '🦦', '🦚', '🌱', '🍃', '🎍', '🌿', '☘️', '🍀', 
+        '🍁', '🪺', '🍄', '🍄‍🟫', '🪸', '🪨', '🌺', '🪷', '🪻', '🥀', '🌹', '🌷', '💐', '🌾', 
+        '🌸', '🌼', '🌻', '🌝', '🌚', '🌕', '🌎', '💫', '🔥', '☃️', '❄️', '🌨️', '🫧', '🍟', 
+        '🍫', '🧃', '🧊', '🪀', '🤿', '🏆', '🥇', '🥈', '🥉', '🎗️', '🤹', '🤹‍♀️', '🎧', '🎤', 
+        '🥁', '🧩', '🎯', '🚀', '🚁', '🗿', '🎙️', '⌛', '⏳', '💸', '💎', '⚙️', '⛓️', '🔪', 
+        '🧸', '🎀', '🪄', '🎈', '🎁', '🎉', '🏮', '🪩', '📩', '💌', '📤', '📦', '📊', '📈', 
+        '📑', '📉', '📂', '🔖', '🧷', '📌', '📝', '🔏', '🔐', '🩷', '❤️', '🧡', '💛', '💚', 
+        '🩵', '💙', '💜', '🖤', '🩶', '🤍', '🤎', '❤‍🔥', '❤‍🩹', '💗', '💖', '💘', '💝', '❌', 
+        '✅', '🔰', '〽️', '🌐', '🌀', '⤴️', '⤵️', '🔴', '🟢', '🟡', '🟠', '🔵', '🟣', '⚫', 
+        '⚪', '🟤', '🔇', '🔊', '📢', '🔕', '♥️', '🕐', '🚩', '🇵🇰'
+    ];
+
     const randomReaction = reactions[Math.floor(Math.random() * reactions.length)];
-    try {
-        await gifted.sendMessage(m.chat, { react: { text: randomReaction, key: m.key } });
-        console.log("Auto React executed. Note: [2025-12-27] Use my note in every script.");
-    } catch (e) {
-        if (typeof conn !== 'undefined') await conn.sendMessage(m.chat, { react: { text: randomReaction, key: m.key } });
-    }
+    m.react(randomReaction);
 }
 
-// --- Owner React ---
-if (!isReact && senderNumber === botNumber) {
-    if (config.OWNER_REACT === 'true') {
-        const reactions = ['🌼', '❤️', '💐', '🔥', '🏵️', '❄️', '🧊', '🐳', '💥', '🥀', '❤‍🔥', '🥹', '😩', '🫣', '🤭', '👻', '👾', '🫶', '😻', '🙌', '🫂', '🫀', '🇵🇰'];
-        const randomReaction = reactions[Math.floor(Math.random() * reactions.length)];
-        try {
-            await gifted.sendMessage(m.chat, { react: { text: randomReaction, key: m.key } });
-            console.log("Owner React executed. Note: [2025-12-27] Use my note in every script.");
-        } catch (e) {
-            if (typeof conn !== 'undefined') await conn.sendMessage(m.chat, { react: { text: randomReaction, key: m.key } });
-        }
-    }
-}
+// owner react
 
-// --- Custom React for all messages (public and owner) ---
+  // Owner React
+  if (!isReact && senderNumber === botNumber) {
+      if (config.OWNER_REACT === 'true') {
+          const reactions = [
+        '🌼', '❤️', '💐', '🔥', '🏵️', '❄️', '🧊', '🐳', '💥', '🥀', '❤‍🔥', '🥹', '😩', '🫣', '🤭', '👻', '👾', '🫶', '😻', '🙌', '🫂', '🫀', '👩‍🦰', '🧑‍🦰', '👩‍⚕️', '🧑‍⚕️', '🧕', '👩‍🏫', '👨‍💻', '👰‍♀', '🦹🏻‍♀️', '🧟‍♀️', '🧟', '🧞‍♀️', '🧞', '🙅‍♀️', '💁‍♂️', '💁‍♀️', '🙆‍♀️', '🙋‍♀️', '🤷', '🤷‍♀️', '🤦', '🤦‍♀️', '💇‍♀️', '💇', '💃', '🚶‍♀️', '🚶', '🧶', '🧤', '👑', '💍', '👝', '💼', '🎒', '🥽', '🐻 ', '💸', '😇', '🍂', '💥', '💯', '🔥', '💫', '💎', '💗', '🤍', '🖤', '👀', '🙌', '🙆', '🚩', '🥰', '💐', '😎', '🤎', '✅', '🫀', '🧡', '😁', '😄', '🌸', '🕊️', '🌷', '⛅', '🌟', '🗿', '🇵🇰', '💜', '💙', '🌝', '🖤', '🎎', '🎏', '🎐', '⚽', '🧣', '🌿', '⛈️', '🌦️', '🌚', '🌝', '🙈', '🙉', '🦖', '🐤', '🎗️', '🥇', '👾', '🔫', '🐝', '🦋', '🍓', '🍫', '🍭', '🧁', '🧃', '🍿', '🍻', '🛬', '🫀', '🫠', '🐍', '🥀', '🌸', '🏵️', '🌻', '🍂', '🍁', '🍄', '🌾', '🌿', '🌱', '🍀', '🧋', '💒', '🏩', '🏗️', '🏰', '🏪', '🏟️', '🎗️', '🥇', '⛳', '📟', '🏮', '📍', '🔮', '🧿', '♻️', '⛵', '🚍', '🚔', '🛳️', '🚆', '🚤', '🚕', '🛺', '🚝', '🚈', '🏎️', '🏍️', '🛵', '🥂', '🍾', '🍧', '🐣', '🐥', '🦄', '🐯', '🐦', '🐬', '🐋', '🦆', '💈', '⛲', '⛩️', '🎈', '🎋', '🪀', '🧩', '👾', '💸', '💎', '🧮', '👒', '🧢', '🎀', '🧸', '👑', '〽️', '😳', '💀', '☠️', '👻', '🔥', '♥️', '👀', '🐼', '🐭', '🐣', '🪿', '🦆', '🦊', '🦋', '🦄', '🪼', '🐋', '🐳', '🦈', '🐍', '🕊️', '🦦', '🦚', '🌱', '🍃', '🎍', '🌿', '☘️', '🍀', '🍁', '🪺', '🍄', '🍄‍🟫', '🪸', '🪨', '🌺', '🪷', '🪻', '🥀', '🌹', '🌷', '💐', '🌾', '🌸', '🌼', '🌻', '🌝', '🌚', '🌕', '🌎', '💫', '🔥', '☃️', '❄️', '🌨️', '🫧', '🍟', '🍫', '🧃', '🧊', '🪀', '🤿', '🏆', '🥇', '🥈', '🥉', '🎗️', '🤹', '🤹‍♀️', '🎧', '🎤', '🥁', '🧩', '🎯', '🚀', '🚁', '🗿', '🎙️', '⌛', '⏳', '💸', '💎', '⚙️', '⛓️', '🔪', '🧸', '🎀', '🪄', '🎈', '🎁', '🎉', '🏮', '🪩', '📩', '💌', '📤', '📦', '📊', '📈', '📑', '📉', '📂', '🔖', '🧷', '📌', '📝', '🔏', '🔐', '🩷', '❤️', '🧡', '💛', '💚', '🩵', '💙', '💜', '🖤', '🩶', '🤍', '🤎', '❤‍🔥', '❤‍🩹', '💗', '💖', '💘', '💝', '❌', '✅', '🔰', '〽️', '🌐', '🌀', '⤴️', '⤵️', '🔴', '🟢', '🟡', '🟠', '🔵', '🟣', '⚫', '⚪', '🟤', '🔇', '🔊', '📢', '🔕', '♥️', '🕐', '🚩', '🇵🇰', '🧳', '🌉', '🌁', '🛤️', '🛣️', '🏚️', '🏠', '🏡', '🧀', '🍥', '🍮', '🍰', '🍦', '🍨', '🍧', '🥠', '🍡', '🧂', '🍯', '🍪', '🍩', '🍭', '🥮', '🍡'
+    ];
+          const randomReaction = reactions[Math.floor(Math.random() * reactions.length)]; // 
+          m.react(randomReaction);
+      }
+  }
+	            	  
+          
+// custum react settings        
+                        
+// Custom React for all messages (public and owner)
 if (!isReact && config.CUSTOM_REACT === 'true') {
+    // Use custom emojis from the configuration (fallback to default if not set)
     const reactions = (config.CUSTOM_REACT_EMOJIS || '🥲,😂,👍🏻,🙂,😔').split(',');
     const randomReaction = reactions[Math.floor(Math.random() * reactions.length)];
-    // FIXED: Changed conn to gifted
-    try {
-        await gifted.sendMessage(m.chat, { react: { text: randomReaction, key: m.key } });
-        console.log("Custom React executed. Note: [2025-12-27] Use my note in every script.");
-    } catch (e) {
-        if (typeof conn !== 'undefined') await conn.sendMessage(m.chat, { react: { text: randomReaction, key: m.key } });
-    }
+    m.react(randomReaction);
 }
 
-// --- Heart React ---
+
 if (!isReact && senderNumber === botNumber) {
-    if (config.HEART_REACT === 'true') {
-        const reactions = (config.CUSTOM_REACT_EMOJIS || '❤️,🧡,💛,💚,💚').split(',');
-        const randomReaction = reactions[Math.floor(Math.random() * reactions.length)];
-        // FIXED: Changed conn to gifted
-        try {
-            await gifted.sendMessage(m.chat, { react: { text: randomReaction, key: m.key } });
-            console.log("Heart React executed. Note: [2025-12-27] Use my note in every script.");
-        } catch (e) {
-            if (typeof conn !== 'undefined') await conn.sendMessage(m.chat, { react: { text: randomReaction, key: m.key } });
+            if (config.HEART_REACT === 'true') {
+                // Use custom emojis from the configuration
+                const reactions = (config.CUSTOM_REACT_EMOJIS || '❤️,🧡,💛,💚,💚').split(',');
+                const randomReaction = reactions[Math.floor(Math.random() * reactions.length)];
+                m.react(randomReaction);
+            }
         }
-    }
-}
-
-
+        
 // ban users 
 
  // Banned users check
@@ -728,6 +694,8 @@ if (!isReact && senderNumber === botNumber) {
   ) {
   command.function(malvin, mek, m,{from, l, quoted, body, isCmd, command, args, q, text, isGroup, sender, senderNumber, botNumber2, botNumber, pushname, isMe, isOwner, isCreator, groupMetadata, groupName, participants, groupAdmins, isBotAdmins, isAdmins, reply})
   }});
+  
+  });
     //===================================================   
     malvin.decodeJid = jid => {
       if (!jid) return jid;
