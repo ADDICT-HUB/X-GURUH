@@ -64,9 +64,8 @@ const {
   getGroupMembersMessageCount,
   saveMessage,
 const fs = require('fs');
-} = require("./data");
 const fsSync = require("fs");
-const fs = require("fs").promises;
+const fsPromises = require("fs").promises; 
 const ff = require("fluent-ffmpeg");
 const P = require("pino");
 const GroupEvents = require("./lib/groupevents");
@@ -93,8 +92,6 @@ const tempDir = path.join(os.tmpdir(), "cache-temp");
 if (!fsSync.existsSync(tempDir)) {
   fsSync.mkdirSync(tempDir);
 }
-
-
 
 const clearTempDir = () => {
   fsSync.readdir(tempDir, (err, files) => {
