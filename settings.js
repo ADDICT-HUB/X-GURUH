@@ -46,9 +46,9 @@ module.exports = {
   LIVE_MSG: "> ʙᴏᴛ ɪs sᴘᴀʀᴋɪɴɢ ᴀᴄᴛɪᴠᴇ ᴀɴᴅ ᴀʟɪᴠᴇ\n> ɢɪᴛʜᴜʙ : github.com/ADDICT-HUB/Botguru",
 
   // ===== REACTION & STICKER SETTINGS =====
-  AUTO_REACT: "true",
+  AUTO_REACT: "false",
   OWNER_REACT: "true",
-  CUSTOM_REACT: "true",
+  CUSTOM_REACT: "false",
   CUSTOM_REACT_EMOJIS: "💝,💖,💗,❤️‍🩹,❤️,🧡,💛,💚,💙,💜,🤎,🖤,🤍",
   STICKER_NAME: "BOT GURU",
   AUTO_STICKER: "true",
