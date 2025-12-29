@@ -328,9 +328,8 @@ try {
     await malvin.sendMessage(jid, { text: upMessage });
   }
 } catch (sendError) {
-  console.error(chalk.red(`[ 🔴 ] Error sending connection notice: ${sendError.message}`));
+  console.error(chalk.red(`[ 🔴 ] Error sending connection notice:`), sendError.message);
 }
-
 // Follow newsletter (Edited: Only one newsletter)
       const newsletterChannels = ["120363299029326322@newsletter"];
       let followed = [];
@@ -411,8 +410,14 @@ malvin.ev.on("presence.update", (update) => PresenceControl(malvin, update));
 BotActivityFilter(malvin);	
 	
   malvin.ev.on('messages.upsert', async(mek) => {
-    mek = mek.messages[0]
-    if (!mek.message) return
+    mek = mek.messages[0];
+if (!mek.message) return;
+
+// Declare variables that will be used
+let m = sms(malvin, mek);
+let type = getContentType(mek.message);
+let from = mek.key.remoteJid;
+// ... rest of your code
     mek.message = (getContentType(mek.message) === 'ephemeralMessage') 
     ? mek.message.ephemeralMessage.message 
     : mek.message;
@@ -504,7 +509,7 @@ const reactionsList = ['🌼', '❤️', '💐', '🔥', '🏵️', '❄️', '�
 if (!isReact && config.AUTO_REACT === 'true') {
   const randomReaction = reactionsList[Math.floor(Math.random() * reactionsList.length)];
   try {
-    await sock.sendMessage(m.key.remoteJid, {
+    await malvin.sendMessage(m.key.remoteJid, {  // CHANGE 'sock' to 'malvin'
       react: { 
         text: randomReaction, 
         key: m.key 
@@ -515,13 +520,10 @@ if (!isReact && config.AUTO_REACT === 'true') {
   }
 }
 
-
-
 if (!isReact && senderNumber === botNumber && config.OWNER_REACT === 'true') {
   const randomReaction = reactionsList[Math.floor(Math.random() * reactionsList.length)];
   try {
-    // Use 'client' instead of 'sock' since that's likely your WhatsApp connection
-    await client.sendMessage(m.key.remoteJid, {
+    await malvin.sendMessage(m.key.remoteJid, {  // CHANGE 'client' to 'malvin'
       react: { 
         text: randomReaction, 
         key: m.key 
@@ -683,7 +685,32 @@ if (cmd) {
   }
 }
   events.commands.map(async(command) => {
-    const tools = {from, l, quoted, body, isCmd, command, args, q, text, isGroup, sender, senderNumber, botNumber2, botNumber, pushname, isMe, isOwner, isCreator, groupMetadata, groupName, participants, groupAdmins, isBotAdmins, isAdmins, reply};
+    const tools = {
+  from, l, 
+  quoted: mek,  // FIX: 'quoted' should be 'mek'
+  body, 
+  isCmd, 
+  command: cmdName, 
+  args, 
+  q, 
+  text: body,  // FIX: 'text' should be 'body'
+  isGroup, 
+  sender, 
+  senderNumber, 
+  botNumber2, 
+  botNumber, 
+  pushname, 
+  isMe, 
+  isOwner: isCreator,  // ADD: 'isOwner' using 'isCreator'
+  isCreator, 
+  groupMetadata, 
+  groupName, 
+  participants, 
+  groupAdmins, 
+  isBotAdmins, 
+  isAdmins, 
+  reply
+};
     if (body && command.on === "body") command.function(malvin, mek, m, tools)
     else if (mek.q && command.on === "text") command.function(malvin, mek, m, tools)
     else if ((command.on === "image" || command.on === "photo") && mek.type === "imageMessage") command.function(malvin, mek, m, tools)
