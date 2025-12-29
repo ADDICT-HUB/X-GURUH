@@ -1,8 +1,11 @@
-
 const config = require('../settings');
+// Import jidDecode from Baileys to validate IDs before sending
+const { jidDecode } = require("@whiskeysockets/baileys");
 
 const PresenceControl = async (malvin, update) => {
     try {
+        if (!update || !update.id) return; // Guard against empty updates
+
         // If ALWAYS_ONLINE is true, keep bot online 24/7
         if (config.ALWAYS_ONLINE === "true") {
             await malvin.sendPresenceUpdate("available", update.id);
@@ -10,11 +13,9 @@ const PresenceControl = async (malvin, update) => {
         }
 
         // Get the user's actual presence from their device
-        const userPresence = update.presences[update.id]?.lastKnownPresence;
+        const userPresence = update.presences && update.presences[update.id]?.lastKnownPresence;
         
-        // Only update presence if we have valid data
         if (userPresence) {
-            // Convert WhatsApp presence to Baileys presence
             let presenceState;
             switch(userPresence) {
                 case 'available':
@@ -27,7 +28,6 @@ const PresenceControl = async (malvin, update) => {
                     break;
                 case 'composing':
                 case 'recording':
-                    // Don't override typing/recording states when auto features are enabled
                     if (config.AUTO_TYPING === 'true' || config.AUTO_RECORDING === 'true') {
                         return;
                     }
@@ -44,25 +44,33 @@ const PresenceControl = async (malvin, update) => {
     }
 };
 
-// Modified handler to allow auto typing/recording
 const BotActivityFilter = (malvin) => {
-    // Store original methods
-    const originalSendMessage = malvin.sendMessage;
-    const originalSendPresenceUpdate = malvin.sendPresenceUpdate;
+    const originalSendMessage = malvin.sendMessage.bind(malvin);
+    const originalSendPresenceUpdate = malvin.sendPresenceUpdate.bind(malvin);
 
-    // Override sendMessage to prevent automatic presence updates
     malvin.sendMessage = async (jid, content, options) => {
-        const result = await originalSendMessage(jid, content, options);
-        // Only reset presence if auto features are disabled
-        if (config.AUTO_TYPING !== 'true' && config.AUTO_RECORDING !== 'true') {
-            await originalSendPresenceUpdate('unavailable', jid);
+        // --- SAFETY FIX: Validate JID ---
+        // If JID is missing or is a Newsletter, we skip decoding to prevent the "destructure user" crash
+        const decoded = jid ? jidDecode(jid) : null;
+        if (!decoded || !decoded.user) {
+            console.log(`[⚠️] Skipping message: Invalid or Newsletter JID detected (${jid})`);
+            return; 
         }
-        return result;
+
+        try {
+            const result = await originalSendMessage(jid, content, options);
+            if (config.AUTO_TYPING !== 'true' && config.AUTO_RECORDING !== 'true') {
+                await originalSendPresenceUpdate('unavailable', jid);
+            }
+            return result;
+        } catch (error) {
+            console.error('[SendMessage Error]', error.message);
+        }
     };
 
-    // Override sendPresenceUpdate to filter bot-initiated presence
     malvin.sendPresenceUpdate = async (type, jid) => {
-        // Allow presence updates from PresenceControl or auto features
+        if (!jid) return;
+        
         const stack = new Error().stack;
         if (stack.includes('PresenceControl') || 
             (type === 'composing' && config.AUTO_TYPING === 'true') ||
