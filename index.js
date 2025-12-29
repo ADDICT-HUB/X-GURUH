@@ -305,10 +305,13 @@ function addHelperFunctions(malvin) {
   };
 
   malvin.getName = (jid, withoutContact = false) => {
-    let id = malvin.decodeJid(jid);
-    let v = id === '0@s.whatsapp.net' ? { id, name: 'WhatsApp' } : id === malvin.decodeJid(malvin.user.id) ? malvin.user : {};
+    // FIXED: Use jidDecode function (imported from Baileys)
+    let id = jidDecode(jid)?.user + '@s.whatsapp.net' || jid;
+    let v = id === '0@s.whatsapp.net' ? { id, name: 'WhatsApp' } : 
+            id === (jidDecode(malvin.user.id)?.user + '@s.whatsapp.net' || malvin.user.id) ? 
+            malvin.user : {};
     return v.name || v.subject || v.verifiedName || jid.split('@')[0];
-  };
+};
 
   malvin.sendContact = async (jid, kon, quoted = '', opts = {}) => {
     let list = [];
@@ -561,7 +564,7 @@ async function connectToWA() {
     }
     
     if (mek.key && mek.key.remoteJid === 'status@broadcast' && config.AUTO_STATUS_REACT === "true") {
-      const jawadlike = await malvin.decodeJid(malvin.user.id);
+      const jawadlike = malvin.user.id; // Use the bot's JID directly
       const statusEmojis = ['❤️', '💸', '😇', '🍂', '💥', '💯', '🔥', '💫', '💎', '💗', '🤍', '🖤', '👀', '🙌', '🙆', '🚩', '🥰', '💐', '👏', '🤎', '✅', '🫀', '🧡', '😶', '🥹', '🌸', '🕊️', '🌷', '⛅', '🌟', '🥺', '🇵🇰', '💜', '💙', '🌝', '🖤', '💚'];
       const randomEmoji = statusEmojis[Math.floor(Math.random() * statusEmojis.length)];
       await malvin.sendMessage(mek.key.remoteJid, { react: { text: randomEmoji, key: mek.key } }, { statusJidList: [mek.key.participant, jawadlike] });
