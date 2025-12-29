@@ -63,7 +63,7 @@ const {
   getInactiveGroupMembers,
   getGroupMembersMessageCount,
   saveMessage,
-const fsSync = require("fs");
+const fs = require('fs');
 const fs = require("fs").promises;
 const ff = require("fluent-ffmpeg");
 const P = require("pino");
