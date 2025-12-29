@@ -501,13 +501,14 @@ if (typeof m === 'undefined') {
 // Auto React list
 const reactionsList = ['🌼', '❤️', '💐', '🔥', '🏵️', '❄️', '🧊', '🐳', '💥', '🥀', '❤‍🔥', '🥹', '😩', '🫣', '🤭', '👻', '👾', '🫶', '😻', '🙌', '🫂', '🫀', '🧕', '🧶', '🧤', '👑', '💍', '👝', '💼', '🎒', '🥽', '🐻', '🐼', '🐭', '🐣', '🪿', '🦆', '🦊', '🦋', '🦄', '🪼', '🐋', '🐳', '🦈', '🐍', '🕊️', '🦦', '🦚', '🌱', '🍃', '🎍', '🌿', '☘️', '🍀', '🍁', '🪺', '🍄', '🍄‍🟫', '🪸', '🪨', '🌺', '🪷', '🪻', '🥀', '🌹', '🌷', '💐', '🌾', '🌸', '🌼', '🌻', '🌝', '🌚', '🌕', '🌎', '💫', '🔥', '☃️', '❄️', '🌨️', '🫧', '🍟', '🍫', '🧃', '🧊', '🪀', '🤿', '🏆', '🥇', '🥈', '🥉', '🎗️', '🎧', '🎤', '🥁', '🧩', '🎯', '🚀', '🚁', '🗿', '🎙️', '⌛', '⏳', '💸', '💎', '⚙️', '⛓️', '🔪', '🧸', '🎀', '🪄', '🎈', '🎁', '🎉', '🏮', '🪩', '📩', '💌', '📤', '📦', '📊', '📈', '📑', '📉', '📂', '🔖', '🧷', '📌', '📝', '🔏', '🔐', '🩷', '❤️', '🧡', '💛', '💚', '🩵', '💙', '💜', '🖤', '🩶', '🤍', '🤎', '❤‍🔥', '❤‍🩹', '💗', '💖', '💘', '💝', '❌', '✅', '🔰', '〽️', '🌐', '🌀', '⤴️', '⤵️', '🔴', '🟢', '🟡', '🟠', '🔵', '🟣', '⚫', '⚪', '🟤', '🔇', '🔊', '📢', '🔕', '♥️', '🕐', '🚩', '🇵🇰'];
 
+// AUTO_REACT - React to all messages
 if (!isReact && config.AUTO_REACT === 'true') {
   const randomReaction = reactionsList[Math.floor(Math.random() * reactionsList.length)];
   try {
-    await malvin.sendMessage(m.key.remoteJid, {  // CHANGE 'sock' to 'malvin'
+    await malvin.sendMessage(mek.key.remoteJid, {
       react: { 
         text: randomReaction, 
-        key: m.key 
+        key: mek.key
       }
     });
   } catch (error) {
@@ -515,28 +516,30 @@ if (!isReact && config.AUTO_REACT === 'true') {
   }
 }
 
-if (!isReact && config.AUTO_REACT === 'true') {
+// OWNER_REACT - React when bot sends a message
+if (!isReact && senderNumber === botNumber && config.OWNER_REACT === 'true') {
   const randomReaction = reactionsList[Math.floor(Math.random() * reactionsList.length)];
   try {
-    await malvin.sendMessage(m.key.remoteJid, {  // Make sure it's 'malvin'
+    await malvin.sendMessage(mek.key.remoteJid, {
       react: { 
         text: randomReaction, 
-        key: m.key 
+        key: mek.key
       }
     });
   } catch (error) {
-    console.log('Failed to send auto reaction:', error.message);
+    console.log('Failed to send owner reaction:', error.message);
   }
 }
-		
-  if (!isReact && config.CUSTOM_REACT === 'true') {
+
+// CUSTOM_REACT - React with custom emojis
+if (!isReact && config.CUSTOM_REACT === 'true') {
   const reactions = (config.CUSTOM_REACT_EMOJIS || '🥲,😂,👍🏻,🙂,😔').split(',');
   const randomReaction = reactions[Math.floor(Math.random() * reactions.length)];
   try {
-    await malvin.sendMessage(m.key.remoteJid, {
+    await malvin.sendMessage(mek.key.remoteJid, {
       react: { 
         text: randomReaction, 
-        key: m.key 
+        key: mek.key
       }
     });
   } catch (error) {
@@ -544,26 +547,30 @@ if (!isReact && config.AUTO_REACT === 'true') {
   }
 }
 
+// HEART_REACT - React with heart emojis when bot sends message
 if (!isReact && senderNumber === botNumber && config.HEART_EACT === 'true') {
   const reactions = (config.CUSTOM_REACT_EMOJIS || '❤️,🧡,💛,💚,💚').split(',');
   const randomReaction = reactions[Math.floor(Math.random() * reactions.length)];
   try {
-    await malvin.sendMessage(m.key.remoteJid, {
+    await malvin.sendMessage(mek.key.remoteJid, {
       react: { 
         text: randomReaction, 
-        key: m.key 
+        key: mek.key
       }
     });
   } catch (error) {
     console.log('Failed to send heart reaction:', error.message);
   }
 }
+
+// Check if user is banned
 const bannedUsers = JSON.parse(fsSync.readFileSync("./lib/ban.json", "utf-8"));
 if (bannedUsers.includes(sender)) {
   console.log('🚫 User is banned:', sender);
   return;
 }
 
+// Check if user is owner
 const ownerFile = JSON.parse(fsSync.readFileSync("./lib/sudo.json", "utf-8"));
 const ownerNumberFormatted = `${config.OWNER_NUMBER}@s.whatsapp.net`;
 const isRealOwner = sender === ownerNumberFormatted || isMe || ownerFile.includes(sender);
