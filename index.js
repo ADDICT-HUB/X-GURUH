@@ -577,20 +577,64 @@ if (!isReact && senderNumber === botNumber && config.HEART_REACT === 'true') {
     console.log('Failed to send heart reaction:', error.message);
   }
 }
-  const bannedUsers = JSON.parse(fsSync.readFileSync("./lib/ban.json", "utf-8"));
-  if (bannedUsers.includes(sender)) return;
+const bannedUsers = JSON.parse(fsSync.readFileSync("./lib/ban.json", "utf-8"));
+if (bannedUsers.includes(sender)) {
+  console.log('🚫 User is banned:', sender);
+  return;
+}
 
-  const ownerFile = JSON.parse(fsSync.readFileSync("./lib/sudo.json", "utf-8"));
-  const ownerNumberFormatted = `${config.OWNER_NUMBER}@s.whatsapp.net`;
-  const isRealOwner = sender === ownerNumberFormatted || isMe || ownerFile.includes(sender);
+const ownerFile = JSON.parse(fsSync.readFileSync("./lib/sudo.json", "utf-8"));
+const ownerNumberFormatted = `${config.OWNER_NUMBER}@s.whatsapp.net`;
+const isRealOwner = sender === ownerNumberFormatted || isMe || ownerFile.includes(sender);
 
-  if (!isRealOwner && config.MODE === "private") return;
-  if (!isRealOwner && isGroup && config.MODE === "inbox") return;
-  if (!isRealOwner && !isGroup && config.MODE === "groups") return;
-	  
-  const events = require('./malvin')
-  const cmdName = isCmd ? body.slice(1).trim().split(" ")[0].toLowerCase() : false;
-const cmd = events.commands.find((cmd) => cmd.pattern === (cmdName)) || events.commands.find((cmd) => cmd.alias && cmd.alias.includes(cmdName));
+// DEBUG LOGGING ADDED HERE
+console.log('🔍 USER CHECK:');
+console.log('- Sender:', sender);
+console.log('- Is me?', isMe);
+console.log('- Is real owner?', isRealOwner);
+console.log('- Config MODE:', config.MODE);
+console.log('- Is group?', isGroup);
+console.log('- Body starts with prefix?', body?.startsWith?.(prefix));
+console.log('- Full body:', body);
+
+if (!isRealOwner && config.MODE === "private") {
+  console.log('🚫 MODE=private, non-owner blocked');
+  return;
+}
+if (!isRealOwner && isGroup && config.MODE === "inbox") {
+  console.log('🚫 MODE=inbox, group message from non-owner blocked');
+  return;
+}
+if (!isRealOwner && !isGroup && config.MODE === "groups") {
+  console.log('🚫 MODE=groups, private message from non-owner blocked');
+  return;
+}
+
+// LOAD EVENTS (REMOVE DUPLICATE LINE)
+const events = require('./malvin');
+
+// DEBUG: Check events module
+console.log('📦 Events module loaded:', {
+  hasCommands: Array.isArray(events.commands),
+  commandCount: events.commands?.length || 0,
+  firstFewCommands: events.commands?.slice(0, 3)?.map(c => c.pattern || c.alias?.[0]) || []
+});
+
+const cmdName = isCmd ? body.slice(1).trim().split(" ")[0].toLowerCase() : false;
+
+// DEBUG: Command detection
+console.log('🎯 COMMAND DETECTION:');
+console.log('- Is command?', isCmd);
+console.log('- Command name:', cmdName);
+console.log('- Args:', args);
+console.log('- Prefix used:', prefix);
+console.log('- Full command string:', body);
+  
+  // FIND THE COMMAND
+  const cmd = cmdName ? events.commands.find((c) => 
+    c.pattern === cmdName || 
+    (c.alias && c.alias.includes(cmdName))
+  ) : null;
 
 if (cmd) {
   if (cmd.react) {
@@ -601,9 +645,41 @@ if (cmd) {
     }
   }
   try {
-    cmd.function(malvin, mek, m, {from, quoted, body, isCmd, command, args, q, text, isGroup, sender, senderNumber, botNumber2, botNumber, pushname, isMe, isOwner, isCreator, groupMetadata, groupName, participants, groupAdmins, isBotAdmins, isAdmins, reply});
+    // FIX: Add missing 'isOwner' variable
+    const isOwner = isCreator; // or define properly based on your logic
+    
+    cmd.function(malvin, mek, m, {
+      from, 
+      quoted: mek,  // FIX: 'quoted' should be 'mek'
+      body, 
+      isCmd, 
+      command: cmdName, 
+      args, 
+      q, 
+      text: body,  // FIX: 'text' should be 'body'
+      isGroup, 
+      sender, 
+      senderNumber, 
+      botNumber2, 
+      botNumber, 
+      pushname, 
+      isMe, 
+      isOwner,  // ADDED
+      isCreator, 
+      groupMetadata, 
+      groupName, 
+      participants, 
+      groupAdmins, 
+      isBotAdmins, 
+      isAdmins, 
+      reply
+    });
   } catch (e) { 
     console.error("[PLUGIN ERROR] " + e); 
+    // Send error to user
+    await malvin.sendMessage(from, {
+      text: `❌ Error: ${e.message}`
+    }, { quoted: mek });
   }
 }
 
