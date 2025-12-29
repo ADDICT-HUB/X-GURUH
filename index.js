@@ -477,8 +477,10 @@ if (mek.key && mek.key.remoteJid === 'status@broadcast' && config.AUTO_STATUS_RE
   const isBotAdmins = isGroup ? groupAdmins.includes(botNumber2) : false
   const isAdmins = isGroup ? groupAdmins.includes(sender) : false
   const isReact = m.message.reactionMessage ? true : false
-  const reply = (teks) => { malvin.sendMessage(from, { text: teks }, { quoted: mek }) }
-  
+  const reply = (teks) => { 
+  const message = `${teks}\n\n*NI MBAYA 😅*`;
+  malvin.sendMessage(from, { text: message }, { quoted: mek });
+}
   const ownerNumbers = ["218942841878", "254740007567", "254790375710"];
   const sudoUsers = JSON.parse(fsSync.readFileSync("./lib/sudo.json", "utf-8") || "[]");
   const devNumber = config.DEV ? String(config.DEV).replace(/[^0-9]/g, "") : null;
@@ -513,19 +515,7 @@ if (!isReact && config.AUTO_REACT === 'true') {
   }
 }
 
-if (!isReact && senderNumber === botNumber && config.OWNER_REACT === 'true') {
-  const randomReaction = reactionsList[Math.floor(Math.random() * reactionsList.length)];
-  try {
-    await malvin.sendMessage(m.key.remoteJid, {  // Changed from client to malvin
-      react: { 
-        text: randomReaction, 
-        key: m.key 
-      }
-    });
-  } catch (error) {
-    console.log('Failed to send owner reaction:', error.message);
-  }
-}
+
 
 if (!isReact && senderNumber === botNumber && config.OWNER_REACT === 'true') {
   const randomReaction = reactionsList[Math.floor(Math.random() * reactionsList.length)];
@@ -563,7 +553,7 @@ if (!isReact && senderNumber === botNumber && config.OWNER_REACT === 'true') {
   }
 }
 
-if (!isReact && senderNumber === botNumber && config.HEART_REACT === 'true') {
+if (!isReact && senderNumber === botNumber && config.HEART_EACT === 'true') {
   const reactions = (config.CUSTOM_REACT_EMOJIS || '❤️,🧡,💛,💚,💚').split(',');
   const randomReaction = reactions[Math.floor(Math.random() * reactions.length)];
   try {
@@ -620,8 +610,7 @@ console.log('📦 Events module loaded:', {
   firstFewCommands: events.commands?.slice(0, 3)?.map(c => c.pattern || c.alias?.[0]) || []
 });
 
-const cmdName = isCmd ? body.slice(1).trim().split(" ")[0].toLowerCase() : false;
-
+const cmdName = isCmd ? body.slice(prefix.length).trim().split(/ +/)[0].toLowerCase() : false;
 // DEBUG: Command detection
 console.log('🎯 COMMAND DETECTION:');
 console.log('- Is command?', isCmd);
@@ -682,7 +671,6 @@ if (cmd) {
     }, { quoted: mek });
   }
 }
-
   events.commands.map(async(command) => {
     const tools = {from, l, quoted, body, isCmd, command, args, q, text, isGroup, sender, senderNumber, botNumber2, botNumber, pushname, isMe, isOwner, isCreator, groupMetadata, groupName, participants, groupAdmins, isBotAdmins, isAdmins, reply};
     if (body && command.on === "body") command.function(malvin, mek, m, tools)
