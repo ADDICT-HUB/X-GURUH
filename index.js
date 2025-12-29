@@ -212,6 +212,123 @@ async function connectWithPairing(malvin, useMobile) {
   }
 }
 
+// Helper functions - MOVED INSIDE connectToWA function
+function addHelperFunctions(malvin) {
+  // Helper functions for malvin object
+  malvin.copyNForward = async(jid, message, forceForward = false, options = {}) => {
+    let vtype;
+    if (options.readViewOnce) {
+      message.message = message.message && message.message.ephemeralMessage && message.message.ephemeralMessage.message ? message.message.ephemeralMessage.message : (message.message || undefined);
+      vtype = Object.keys(message.message.viewOnceMessage.message)[0];
+      delete(message.message && message.message.ignore ? message.message.ignore : (message.message || undefined));
+      delete message.message.viewOnceMessage.message[vtype].viewOnce;
+      message.message = { ...message.message.viewOnceMessage.message };
+    }
+    let mtype = Object.keys(message.message)[0];
+    let content = await generateForwardMessageContent(message, forceForward);
+    let ctype = Object.keys(content)[0];
+    let context = {};
+    if (mtype != "conversation") context = message.message[mtype].contextInfo;
+    content[ctype].contextInfo = { ...context, ...content[ctype].contextInfo };
+    const waMessage = await generateWAMessageFromContent(jid, content, options ? { ...content[ctype], ...options } : {});
+    await malvin.relayMessage(jid, waMessage.message, { messageId: waMessage.key.id });
+    return waMessage;
+  };
+
+  // Fixed download function with FileType.fromBuffer
+  malvin.downloadAndSaveMediaMessage = async(message, filename, attachExtension = true) => {
+    let quoted = message.msg ? message.msg : message;
+    let mime = (message.msg || message).mimetype || '';
+    let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0];
+    const stream = await downloadContentFromMessage(quoted, messageType);
+    let buffer = Buffer.from([]);
+    for await (const chunk of stream) { buffer = Buffer.concat([buffer, chunk]); }
+    let type = await FileType.fromBuffer(buffer);
+    let trueFileName = attachExtension ? (filename + '.' + type.ext) : filename;
+    await fs.writeFile(trueFileName, buffer);
+    return trueFileName;
+  };
+
+  malvin.downloadMediaMessage = async(message) => {
+    let mime = (message.msg || message).mimetype || '';
+    let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0];
+    const stream = await downloadContentFromMessage(message, messageType);
+    let buffer = Buffer.from([]);
+    for await (const chunk of stream) { buffer = Buffer.concat([buffer, chunk]); }
+    return buffer;
+  };
+
+  malvin.sendFileUrl = async (jid, url, caption, quoted, options = {}) => {
+    let res = await axios.head(url);
+    let mime = res.headers['content-type'];
+    if (mime.split("/")[1] === "gif") return malvin.sendMessage(jid, { video: await getBuffer(url), caption: caption, gifPlayback: true, ...options }, { quoted: quoted });
+    if (mime === "application/pdf") return malvin.sendMessage(jid, { document: await getBuffer(url), mimetype: 'application/pdf', caption: caption, ...options }, { quoted: quoted });
+    if (mime.split("/")[0] === "image") return malvin.sendMessage(jid, { image: await getBuffer(url), caption: caption, ...options }, { quoted: quoted });
+    if (mime.split("/")[0] === "video") return malvin.sendMessage(jid, { video: await getBuffer(url), caption: caption, mimetype: 'video/mp4', ...options }, { quoted: quoted });
+    if (mime.split("/")[0] === "audio") return malvin.sendMessage(jid, { audio: await getBuffer(url), caption: caption, mimetype: 'audio/mpeg', ...options }, { quoted: quoted });
+  };
+
+  malvin.cMod = (jid, copy, text = '', sender = malvin.user.id, options = {}) => {
+    let mtype = Object.keys(copy.message)[0];
+    let isEphemeral = mtype === 'ephemeralMessage';
+    if (isEphemeral) mtype = Object.keys(copy.message.ephemeralMessage.message)[0];
+    let msg = isEphemeral ? copy.message.ephemeralMessage.message : copy.message;
+    let content = msg[mtype];
+    if (typeof content === 'string') msg[mtype] = text || content;
+    else if (content.caption) content.caption = text || content.caption;
+    else if (content.text) content.text = text || content.text;
+    if (typeof content !== 'string') msg[mtype] = { ...content, ...options };
+    copy.key.remoteJid = jid;
+    copy.key.fromMe = sender === malvin.user.id;
+    return proto.WebMessageInfo.fromObject(copy);
+  };
+
+  malvin.getFile = async(PATH, save) => {
+    let res;
+    let data = Buffer.isBuffer(PATH) ? PATH : /^data:.*?\/.*?;base64,/i.test(PATH) ? Buffer.from(PATH.split `,` [1], 'base64') : /^https?:\/\//.test(PATH) ? await (res = await getBuffer(PATH)) : fsSync.existsSync(PATH) ? fsSync.readFileSync(PATH) : typeof PATH === 'string' ? PATH : Buffer.alloc(0);
+    let type = await FileType.fromBuffer(data) || { mime: 'application/octet-stream', ext: '.bin' };
+    let filename = path.join(__filename, __dirname + new Date * 1 + '.' + type.ext);
+    if (data && save) fs.writeFile(filename, data);
+    return { res, filename, size: data.length, ...type, data };
+  };
+
+  malvin.sendFile = async(jid, PATH, fileName, quoted = {}, options = {}) => {
+    let types = await malvin.getFile(PATH, true);
+    let { filename, mime, data } = types;
+    let type = /image/.test(mime) ? 'image' : /video/.test(mime) ? 'video' : /audio/.test(mime) ? 'audio' : 'document';
+    await malvin.sendMessage(jid, { [type]: { url: filename }, mimetype: mime, fileName, ...options }, { quoted });
+    return fs.unlink(filename);
+  };
+
+  malvin.parseMention = async(text) => {
+    return [...text.matchAll(/@([0-9]{5,16}|0)/g)].map(v => v[1] + '@s.whatsapp.net');
+  };
+
+  malvin.getName = (jid, withoutContact = false) => {
+    let id = malvin.decodeJid(jid);
+    let v = id === '0@s.whatsapp.net' ? { id, name: 'WhatsApp' } : id === malvin.decodeJid(malvin.user.id) ? malvin.user : {};
+    return v.name || v.subject || v.verifiedName || jid.split('@')[0];
+  };
+
+  malvin.sendContact = async (jid, kon, quoted = '', opts = {}) => {
+    let list = [];
+    for (let i of kon) {
+      list.push({
+        displayName: await malvin.getName(i + '@s.whatsapp.net'),
+        vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${await malvin.getName(i + '@s.whatsapp.net')}\nFN:Owner\nitem1.TEL;waid=${i}:${i}\nitem1.X-ABLabel:Click here to chat\nEND:VCARD`,
+      });
+    }
+    malvin.sendMessage(jid, { contacts: { displayName: `${list.length} Contact`, contacts: list }, ...opts }, { quoted });
+  };
+
+  malvin.setStatus = status => {
+    malvin.query({ tag: 'iq', attrs: { to: '@s.whatsapp.net', type: 'set', xmlns: 'status' }, content: [{ tag: 'status', attrs: {}, content: Buffer.from(status, 'utf-8') }] });
+    return status;
+  };
+
+  malvin.serializeM = mek => sms(malvin, mek);
+}
+
 async function connectToWA() {
   console.log(chalk.cyan("[ 🟠 ] Connecting to WhatsApp ⏳️..."));
 
@@ -234,6 +351,9 @@ async function connectToWA() {
     version,
     getMessage: async () => ({}),
   });
+
+  // ADD HELPER FUNCTIONS HERE - AFTER malvin IS CREATED
+  addHelperFunctions(malvin);
 
   if (pairingCode && !state.creds.registered) {
     await connectWithPairing(malvin, useMobile);
@@ -753,120 +873,6 @@ async function connectToWA() {
     });
   });
 }
-
-// Helper functions for malvin object
-malvin.copyNForward = async(jid, message, forceForward = false, options = {}) => {
-  let vtype;
-  if (options.readViewOnce) {
-    message.message = message.message && message.message.ephemeralMessage && message.message.ephemeralMessage.message ? message.message.ephemeralMessage.message : (message.message || undefined);
-    vtype = Object.keys(message.message.viewOnceMessage.message)[0];
-    delete(message.message && message.message.ignore ? message.message.ignore : (message.message || undefined));
-    delete message.message.viewOnceMessage.message[vtype].viewOnce;
-    message.message = { ...message.message.viewOnceMessage.message };
-  }
-  let mtype = Object.keys(message.message)[0];
-  let content = await generateForwardMessageContent(message, forceForward);
-  let ctype = Object.keys(content)[0];
-  let context = {};
-  if (mtype != "conversation") context = message.message[mtype].contextInfo;
-  content[ctype].contextInfo = { ...context, ...content[ctype].contextInfo };
-  const waMessage = await generateWAMessageFromContent(jid, content, options ? { ...content[ctype], ...options } : {});
-  await malvin.relayMessage(jid, waMessage.message, { messageId: waMessage.key.id });
-  return waMessage;
-};
-
-// Fixed download function with FileType.fromBuffer
-malvin.downloadAndSaveMediaMessage = async(message, filename, attachExtension = true) => {
-  let quoted = message.msg ? message.msg : message;
-  let mime = (message.msg || message).mimetype || '';
-  let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0];
-  const stream = await downloadContentFromMessage(quoted, messageType);
-  let buffer = Buffer.from([]);
-  for await (const chunk of stream) { buffer = Buffer.concat([buffer, chunk]); }
-  let type = await FileType.fromBuffer(buffer);
-  let trueFileName = attachExtension ? (filename + '.' + type.ext) : filename;
-  await fs.writeFile(trueFileName, buffer);
-  return trueFileName;
-};
-
-malvin.downloadMediaMessage = async(message) => {
-  let mime = (message.msg || message).mimetype || '';
-  let messageType = message.mtype ? message.mtype.replace(/Message/gi, '') : mime.split('/')[0];
-  const stream = await downloadContentFromMessage(message, messageType);
-  let buffer = Buffer.from([]);
-  for await (const chunk of stream) { buffer = Buffer.concat([buffer, chunk]); }
-  return buffer;
-};
-
-malvin.sendFileUrl = async (jid, url, caption, quoted, options = {}) => {
-  let res = await axios.head(url);
-  let mime = res.headers['content-type'];
-  if (mime.split("/")[1] === "gif") return malvin.sendMessage(jid, { video: await getBuffer(url), caption: caption, gifPlayback: true, ...options }, { quoted: quoted });
-  if (mime === "application/pdf") return malvin.sendMessage(jid, { document: await getBuffer(url), mimetype: 'application/pdf', caption: caption, ...options }, { quoted: quoted });
-  if (mime.split("/")[0] === "image") return malvin.sendMessage(jid, { image: await getBuffer(url), caption: caption, ...options }, { quoted: quoted });
-  if (mime.split("/")[0] === "video") return malvin.sendMessage(jid, { video: await getBuffer(url), caption: caption, mimetype: 'video/mp4', ...options }, { quoted: quoted });
-  if (mime.split("/")[0] === "audio") return malvin.sendMessage(jid, { audio: await getBuffer(url), caption: caption, mimetype: 'audio/mpeg', ...options }, { quoted: quoted });
-};
-
-malvin.cMod = (jid, copy, text = '', sender = malvin.user.id, options = {}) => {
-  let mtype = Object.keys(copy.message)[0];
-  let isEphemeral = mtype === 'ephemeralMessage';
-  if (isEphemeral) mtype = Object.keys(copy.message.ephemeralMessage.message)[0];
-  let msg = isEphemeral ? copy.message.ephemeralMessage.message : copy.message;
-  let content = msg[mtype];
-  if (typeof content === 'string') msg[mtype] = text || content;
-  else if (content.caption) content.caption = text || content.caption;
-  else if (content.text) content.text = text || content.text;
-  if (typeof content !== 'string') msg[mtype] = { ...content, ...options };
-  copy.key.remoteJid = jid;
-  copy.key.fromMe = sender === malvin.user.id;
-  return proto.WebMessageInfo.fromObject(copy);
-};
-
-malvin.getFile = async(PATH, save) => {
-  let res;
-  let data = Buffer.isBuffer(PATH) ? PATH : /^data:.*?\/.*?;base64,/i.test(PATH) ? Buffer.from(PATH.split `,` [1], 'base64') : /^https?:\/\//.test(PATH) ? await (res = await getBuffer(PATH)) : fsSync.existsSync(PATH) ? fsSync.readFileSync(PATH) : typeof PATH === 'string' ? PATH : Buffer.alloc(0);
-  let type = await FileType.fromBuffer(data) || { mime: 'application/octet-stream', ext: '.bin' };
-  let filename = path.join(__filename, __dirname + new Date * 1 + '.' + type.ext);
-  if (data && save) fs.writeFile(filename, data);
-  return { res, filename, size: data.length, ...type, data };
-};
-
-malvin.sendFile = async(jid, PATH, fileName, quoted = {}, options = {}) => {
-  let types = await malvin.getFile(PATH, true);
-  let { filename, mime, data } = types;
-  let type = /image/.test(mime) ? 'image' : /video/.test(mime) ? 'video' : /audio/.test(mime) ? 'audio' : 'document';
-  await malvin.sendMessage(jid, { [type]: { url: filename }, mimetype: mime, fileName, ...options }, { quoted });
-  return fs.unlink(filename);
-};
-
-malvin.parseMention = async(text) => {
-  return [...text.matchAll(/@([0-9]{5,16}|0)/g)].map(v => v[1] + '@s.whatsapp.net');
-};
-
-malvin.getName = (jid, withoutContact = false) => {
-  let id = malvin.decodeJid(jid);
-  let v = id === '0@s.whatsapp.net' ? { id, name: 'WhatsApp' } : id === malvin.decodeJid(malvin.user.id) ? malvin.user : {};
-  return v.name || v.subject || v.verifiedName || jid.split('@')[0];
-};
-
-malvin.sendContact = async (jid, kon, quoted = '', opts = {}) => {
-  let list = [];
-  for (let i of kon) {
-    list.push({
-      displayName: await malvin.getName(i + '@s.whatsapp.net'),
-      vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${await malvin.getName(i + '@s.whatsapp.net')}\nFN:Owner\nitem1.TEL;waid=${i}:${i}\nitem1.X-ABLabel:Click here to chat\nEND:VCARD`,
-    });
-  }
-  malvin.sendMessage(jid, { contacts: { displayName: `${list.length} Contact`, contacts: list }, ...opts }, { quoted });
-};
-
-malvin.setStatus = status => {
-  malvin.query({ tag: 'iq', attrs: { to: '@s.whatsapp.net', type: 'set', xmlns: 'status' }, content: [{ tag: 'status', attrs: {}, content: Buffer.from(status, 'utf-8') }] });
-  return status;
-};
-
-malvin.serializeM = mek => sms(malvin, mek);
 
 // Express routes
 app.use(express.static(path.join(__dirname, "lib")));
