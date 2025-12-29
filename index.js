@@ -701,8 +701,6 @@ if (cmd) {
     else if ((command.on === "image" || command.on === "photo") && mek.type === "imageMessage") command.function(malvin, mek, m, tools)
     else if (command.on === "sticker" && mek.type === "stickerMessage") command.function(malvin, mek, m, tools)
   });
-  
-});
 
 malvin.decodeJid = jid => {
   if (!jid) return jid;
