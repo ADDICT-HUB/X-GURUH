@@ -396,7 +396,7 @@ async function connectToWA() {
       // Send connection message
       try {
         await sleep(2000);
-        const jid = malvin.decodeJid(malvin.user.id);
+        const jid = malvin.user.id; // FIXED: Use the JID directly
         if (!jid) throw new Error("Invalid JID for bot");
 
         const botname = "𝗫𝗚𝗨𝗥𝗨";
