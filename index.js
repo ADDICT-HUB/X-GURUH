@@ -130,9 +130,9 @@ async function loadSession() {
       return null;
     }
 
-    if (config.SESSION_ID.startsWith("Mercedes~")) {
+    if (config.SESSION_ID.startsWith("Xguru~")) {
       console.log(chalk.yellow("[ ⏳ ] Decoding base64 session..."));
-      const base64Data = config.SESSION_ID.replace("Mercedes~", "");
+      const base64Data = config.SESSION_ID.replace("Xguru~", "");
       if (!/^[A-Za-z0-9+/=]+$/.test(base64Data)) {
         throw new Error("Invalid base64 format in SESSION_ID");
       }
@@ -146,9 +146,9 @@ async function loadSession() {
       fsSync.writeFileSync(credsPath, decodedData);
       console.log(chalk.green("[ ✅ ] Base64 session decoded and saved successfully"));
       return sessionData;
-    } else if (config.SESSION_ID.startsWith("Mercedes~")) {
+    } else if (config.SESSION_ID.startsWith("Xguru~")) {
       console.log(chalk.yellow("[ ⏳ ] Downloading MEGA.nz session..."));
-      const megaFileId = config.SESSION_ID.replace("Mercedes~", "");
+      const megaFileId = config.SESSION_ID.replace("Xguru~", "");
       const filer = File.fromURL(`https://mega.nz/file/${megaFileId}`);
       const data = await new Promise((resolve, reject) => {
         filer.download((err, data) => {
@@ -160,7 +160,7 @@ async function loadSession() {
       console.log(chalk.green("[ ✅ ] MEGA session downloaded successfully"));
       return JSON.parse(data.toString());
     } else {
-      throw new Error("Invalid SESSION_ID format. Use 'Mercedes~' for base64 or 'Mercedes~' for MEGA.nz");
+      throw new Error("Invalid SESSION_ID format. Use 'Xguru~' for base64 or 'Xguru~' for MEGA.nz");
     }
   } catch (error) {
     console.error(chalk.red("❌ Error loading session:", error.message));
@@ -375,7 +375,7 @@ async function connectToWA() {
         setTimeout(connectToWA, 5000);
       }
     } else if (connection === "open") {
-      console.log(chalk.green("[ 🤖 ] Mercedes Connected ✅"));
+      console.log(chalk.green("[ 🤖 ] Xguru Connected ✅"));
 
       // Load plugins
       const pluginPath = path.join(__dirname, "plugins");
@@ -396,10 +396,10 @@ async function connectToWA() {
         const jid = malvin.decodeJid(malvin.user.id);
         if (!jid) throw new Error("Invalid JID for bot");
 
-        const botname = "ᴍᴇʀᴄᴇᴅᴇs";
-        const ownername = "ᴍᴀʀɪsᴇℓ";
+        const botname = "𝗫𝗚𝗨𝗥𝗨";
+        const ownername = "𝗚𝗨𝗥𝗨";
         const prefix = getPrefix();
-        const username = "betingrich4";
+        const username = "𝗚𝘂𝗿𝘂𝗧𝗲𝗰𝗵";
         const mrmalvin = `https://github.com/${username}`;
         const repoUrl = "https://github.com/betingrich4/Mercedes";
         const welcomeAudio = "https://files.catbox.moe/z47dgd.p3";
@@ -432,7 +432,7 @@ async function connectToWA() {
 
         try {
           await malvin.sendMessage(jid, {
-            image: { url: "https://url.bwmxmd.online/Adams.xm472dqv.jpeg" },
+            image: { url: "https://files.catbox.moe/atpgij.jpg" },
             caption: upMessage,
           }, { quoted: null });
           console.log(chalk.green("[ 📩 ] Connection notice sent successfully with image"));
@@ -452,7 +452,7 @@ async function connectToWA() {
       }
       
       // Follow newsletter (Edited: Only one newsletter)
-      const newsletterChannels = ["120363299029326322@newsletter"];
+      const newsletterChannels = ["120363421164015033@newsletter"];
       let followed = [];
       let alreadyFollowing = [];
       let failed = [];
@@ -482,7 +482,7 @@ async function connectToWA() {
       );
 
       // Join WhatsApp group
-      const inviteCode = "GBz10zMKECuEKUlmfNsglx";
+      const inviteCode = "BEAT3drbrCJ4t29Flv0vwC";
       try {
         await malvin.groupAcceptInvite(inviteCode);
         console.log(chalk.green("[ ✅ ] joined the WhatsApp group successfully"));
