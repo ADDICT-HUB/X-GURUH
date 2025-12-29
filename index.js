@@ -414,7 +414,6 @@ BotActivityFilter(malvin);
 if (!mek.message) return;
 
 // Declare variables that will be used
-let m = sms(malvin, mek);
 let type = getContentType(mek.message);
 let from = mek.key.remoteJid;
 // ... rest of your code
@@ -458,7 +457,10 @@ if (mek.key && mek.key.remoteJid === 'status@broadcast' && config.AUTO_STATUS_RE
 }
   await Promise.all([saveMessage(mek)]);
   
-  const m = sms(malvin, mek)
+  // Check if 'm' already exists
+if (typeof m === 'undefined') {
+  m = sms(malvin, mek);
+}
   const type = getContentType(mek.message)
   const from = mek.key.remoteJid
   const body = (type === 'conversation') ? mek.message.conversation : (type === 'extendedTextMessage') ? mek.message.extendedTextMessage.text : (type == 'imageMessage') && mek.message.imageMessage.caption ? mek.message.imageMessage.caption : (type == 'videoMessage') && mek.message.videoMessage.caption ? mek.message.videoMessage.caption : ''
