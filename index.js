@@ -64,7 +64,7 @@ const {
   getGroupMembersMessageCount,
   saveMessage,
 const fs = require('fs');
-const fs = require("fs").promises;
+const fsPromises = fs.promises;
 const ff = require("fluent-ffmpeg");
 const P = require("pino");
 const GroupEvents = require("./lib/groupevents");
