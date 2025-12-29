@@ -356,7 +356,7 @@ try {
 
       console.log(
         chalk.cyan(
-          `📡 Newsletter Follow Status:\n✅ Followed: ${followed.length}\n📌 Already following: ${alreadyFollowing.length}\n❌ Failed: ${failed.length}`
+          `Newsletter Follow Status:\nFollowed: ${followed.length}\nAlready following: ${alreadyFollowing.length}\nFailed: ${failed.length}`
         )
       );
 
@@ -385,6 +385,7 @@ try {
       }
     }
   });
+  
 malvin.ev.on('call', async (calls) => {
   try {
     if (config.ANTI_CALL !== 'true') return;
@@ -399,8 +400,9 @@ malvin.ev.on('call', async (calls) => {
     console.error("Anti-call error:", err);
   }
 });
+
 // ... rest of your code
-    malvin.ev.on('messages.upsert', async(mek) => {
+malvin.ev.on('messages.upsert', async(mek) => {
   mek = mek.messages[0]
   if (!mek.message) return
   
@@ -566,7 +568,7 @@ if (!isReact && senderNumber === botNumber && config.HEART_EACT === 'true') {
 // Check if user is banned
 const bannedUsers = JSON.parse(fsSync.readFileSync("./lib/ban.json", "utf-8"));
 if (bannedUsers.includes(sender)) {
-  console.log('🚫 User is banned:', sender);
+  console.log('User is banned:', sender);
   return;
 }
 
@@ -576,7 +578,7 @@ const ownerNumberFormatted = `${config.OWNER_NUMBER}@s.whatsapp.net`;
 const isRealOwner = sender === ownerNumberFormatted || isMe || ownerFile.includes(sender);
 
 // DEBUG: Show current mode and access
-console.log('🔧 MODE & ACCESS DEBUG:');
+console.log('MODE & ACCESS DEBUG:');
 console.log('- Sender:', sender);
 console.log('- Is me (bot)?', isMe);
 console.log('- Is real owner?', isRealOwner);
@@ -589,99 +591,49 @@ console.log('- Body:', body);
 
 // FIXED LOGIC: Always allow owner, check MODE for others
 if (isRealOwner) {
-  console.log('✅ Owner access granted (always allowed)');
+  console.log('Owner access granted (always allowed)');
   // Owner can always use commands, skip MODE checks
 } else {
-  console.log('👤 Non-owner detected, checking MODE...');
+  console.log('Non-owner detected, checking MODE...');
   
   // Check MODE for non-owners only
   if (config.MODE === "private") {
-    console.log('🚫 MODE=private, non-owner blocked');
+    console.log('MODE=private, non-owner blocked');
     return;
   }
   if (config.MODE === "inbox" && isGroup) {
-    console.log('🚫 MODE=inbox, group message from non-owner blocked');
+    console.log('MODE=inbox, group message from non-owner blocked');
     return;
   }
   if (config.MODE === "groups" && !isGroup) {
-    console.log('🚫 MODE=groups, private message from non-owner blocked');
+    console.log('MODE=groups, private message from non-owner blocked');
     return;
   }
-  console.log('✅ Non-owner access granted (allowed by MODE)');
+  console.log('Non-owner access granted (allowed by MODE)');
 }
-// LOAD EVENTS (REMOVE DUPLICATE LINE)
+
+// LOAD EVENTS
 const events = require('./malvin');
 
 // DEBUG: Check events module
-console.log('📦 Events module loaded:', {
+console.log('Events module loaded:', {
   hasCommands: Array.isArray(events.commands),
   commandCount: events.commands?.length || 0,
   firstFewCommands: events.commands?.slice(0, 3)?.map(c => c.pattern || c.alias?.[0]) || []
 });
 
 const cmdName = isCmd ? body.slice(prefix.length).trim().split(/ +/)[0].toLowerCase() : false;
+
 // DEBUG: Command detection
-console.log('🎯 COMMAND DETECTION:');
+console.log('COMMAND DETECTION:');
 console.log('- Is command?', isCmd);
 console.log('- Command name:', cmdName);
 console.log('- Args:', args);
 console.log('- Prefix used:', prefix);
 console.log('- Full command string:', body);
-  
-  // FIND THE COMMAND
-  const cmd = cmdName ? events.commands.find((c) => 
-    c.pattern === cmdName || 
-    (c.alias && c.alias.includes(cmdName))
-  ) : null;
-
-if (cmd) {
-  if (cmd.react) {
-    try {
-      await malvin.sendMessage(from, { react: { text: cmd.react, key: mek.key }});
-    } catch (error) {
-      console.log('Failed to send command reaction:', error.message);
-    }
-  }
-  try {
-    // FIX: Add missing 'isOwner' variable
-    const isOwner = isCreator; // or define properly based on your logic
-    
-    cmd.function(malvin, mek, m, {
-      from, 
-      quoted: mek,  // FIX: 'quoted' should be 'mek'
-      body, 
-      isCmd, 
-      command: cmdName, 
-      args, 
-      q, 
-      text: body,  // FIX: 'text' should be 'body'
-      isGroup, 
-      sender, 
-      senderNumber, 
-      botNumber2, 
-      botNumber, 
-      pushname, 
-      isMe, 
-      isOwner,  // ADDED
-      isCreator, 
-      groupMetadata, 
-      groupName, 
-      participants, 
-      groupAdmins, 
-console.log('📦 EVENTS DEBUG:');
-console.log('- hasCommands:', Array.isArray(events.commands));
-console.log('- commandCount:', events.commands?.length || 0);
-console.log('- firstFewCommands:', events.commands?.slice(0, 3)?.map(c => c.pattern || c.alias?.[0]) || []);
 
 // ONLY check for commands if we should process this message
 if (isCmd && cmdName) {
-  console.log('🎯 COMMAND DETECTION:');
-  console.log('- Is command?', isCmd);
-  console.log('- Command name:', cmdName);
-  console.log('- Args:', args);
-  console.log('- Prefix used:', prefix);
-  console.log('- Full command string:', body);
-  
   // FIND THE COMMAND
   const cmd = events.commands.find((c) => 
     c.pattern === cmdName || 
@@ -689,7 +641,7 @@ if (isCmd && cmdName) {
   );
 
   if (cmd) {
-    console.log(`✅ Command found: ${cmdName}`);
+    console.log(`Command found: ${cmdName}`);
     
     if (cmd.react) {
       try {
@@ -700,8 +652,7 @@ if (isCmd && cmdName) {
     }
     
     try {
-      // FIX: Add missing 'isOwner' variable
-      const isOwner = isCreator; // or define properly based on your logic
+      const isOwner = isCreator;
       
       await cmd.function(malvin, mek, m, {
         from, 
@@ -719,7 +670,7 @@ if (isCmd && cmdName) {
         botNumber, 
         pushname, 
         isMe, 
-        isOwner,  // ADDED
+        isOwner,
         isCreator, 
         groupMetadata, 
         groupName, 
@@ -729,7 +680,7 @@ if (isCmd && cmdName) {
         isAdmins, 
         reply
       });
-      console.log(`✅ Command executed successfully: ${cmdName}`);
+      console.log(`Command executed successfully: ${cmdName}`);
     } catch (e) { 
       console.error("[PLUGIN ERROR] " + e); 
       console.error("Stack:", e.stack);
@@ -737,22 +688,22 @@ if (isCmd && cmdName) {
       // Send error to user
       try {
         await malvin.sendMessage(from, {
-          text: `❌ Error executing command: ${e.message}`
+          text: `Error executing command: ${e.message}`
         }, { quoted: mek });
       } catch (sendError) {
         console.error("Failed to send error message:", sendError.message);
       }
     }
   } else {
-    console.log(`❌ Command not found: ${cmdName}`);
+    console.log(`Command not found: ${cmdName}`);
     // Optional: Send "command not found" message
-    // await malvin.sendMessage(from, { text: `❌ Command not found: ${cmdName}` }, { quoted: mek });
+    // await malvin.sendMessage(from, { text: `Command not found: ${cmdName}` }, { quoted: mek });
   }
 } else {
-  console.log('📭 Not a command or no command name');
+  console.log('Not a command or no command name');
 }
 
-// This should come BEFORE command detection in your code structure:
+// Process command.on events
 events.commands.map(async(command) => {
   const tools = {
     from, l, 
@@ -782,20 +733,22 @@ events.commands.map(async(command) => {
   };
   
   if (body && command.on === "body") {
-    console.log(`🔄 Processing command.on="body": ${command.pattern || command.alias?.[0]}`);
+    console.log(`Processing command.on="body": ${command.pattern || command.alias?.[0]}`);
     await command.function(malvin, mek, m, tools);
   } else if (mek.q && command.on === "text") {
-    console.log(`🔄 Processing command.on="text": ${command.pattern || command.alias?.[0]}`);
+    console.log(`Processing command.on="text": ${command.pattern || command.alias?.[0]}`);
     await command.function(malvin, mek, m, tools);
   } else if ((command.on === "image" || command.on === "photo") && mek.type === "imageMessage") {
-    console.log(`🔄 Processing command.on="image": ${command.pattern || command.alias?.[0]}`);
+    console.log(`Processing command.on="image": ${command.pattern || command.alias?.[0]}`);
     await command.function(malvin, mek, m, tools);
   } else if (command.on === "sticker" && mek.type === "stickerMessage") {
-    console.log(`🔄 Processing command.on="sticker": ${command.pattern || command.alias?.[0]}`);
+    console.log(`Processing command.on="sticker": ${command.pattern || command.alias?.[0]}`);
     await command.function(malvin, mek, m, tools);
   }
 });
-	  
+});
+
+// Helper functions for malvin object
 malvin.copyNForward = async(jid, message, forceForward = false, options = {}) => {
   let vtype
   if (options.readViewOnce) {
@@ -908,8 +861,6 @@ malvin.setStatus = status => {
 };
 
 malvin.serializeM = mek => sms(malvin, mek, store);
-
-}
 
 app.use(express.static(path.join(__dirname, "lib")));
 app.get("/", (req, res) => { res.redirect("/marisel.html"); });
