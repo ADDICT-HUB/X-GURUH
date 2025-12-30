@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { getConfig } = require('./lib/configdb');
+const { getConfig } = require('./core/lib/configdb');
 const settings = require('./settingss');
 
 if (fs.existsSync(path.resolve('config.env'))) {
