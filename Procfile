@@ -1,1 +1,1 @@
-web: node universal-bot-nosharp.js
+web: node simple-bot.js
