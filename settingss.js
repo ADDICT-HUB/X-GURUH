@@ -8,3 +8,6 @@ module.exports = {
   
   TIMEZONE: "Africa/Nairobi" //put your country timeZone....leave blank if u don't know.
 };
+
+// Baileys WhatsApp library
+BAILEYS: "@whiskeysockets/baileys",
