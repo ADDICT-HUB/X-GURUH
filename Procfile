@@ -1,1 +1,1 @@
-web: node simple-bot-fixed.js
+web: node session-bot.js
