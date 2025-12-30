@@ -1,11 +1,47 @@
-// Functions module for Heroku
+// Functions module for Heroku deployment
+// Provides minimal implementations to prevent errors
+
 module.exports = {
-    getBuffer: () => Buffer.from(''),
-    getGroupAdmins: (participants) => participants?.filter(p => p.admin)?.map(p => p.id) || [],
-    getRandom: (arr) => arr?.[Math.floor(Math.random() * (arr.length || 1))] || null,
-    h2k: (num) => num >= 1000 ? (num/1000).toFixed(1) + 'K' : num.toString(),
-    isUrl: (text) => {
-        try { new URL(text); return true; } catch { return false; }
+    getBuffer: function(input) {
+        if (typeof input === 'string') {
+            return Buffer.from(input);
+        }
+        return Buffer.from('');
     },
-    Json: (obj) => JSON.stringify(obj, null, 2),
+    
+    getGroupAdmins: function(participants) {
+        if (!Array.isArray(participants)) return [];
+        return participants
+            .filter(p => p && p.admin)
+            .map(p => p.id || p.jid);
+    },
+    
+    getRandom: function(arr) {
+        if (!Array.isArray(arr) || arr.length === 0) return null;
+        return arr[Math.floor(Math.random() * arr.length)];
+    },
+    
+    h2k: function(number) {
+        if (typeof number !== 'number') number = parseInt(number) || 0;
+        if (number >= 1000) {
+            return (number / 1000).toFixed(1) + 'K';
+        }
+        return number.toString();
+    },
+    
+    isUrl: function(text) {
+        if (typeof text !== 'string') return false;
+        try {
+            new URL(text);
+            return true;
+        } catch {
+            return false;
+        }
+    },
+    
+    Json: function(obj, indent = 2) {
+        return JSON.stringify(obj, null, indent);
+    },
+    
+    // Add more functions as needed
 };

@@ -46,7 +46,7 @@ const {
   runtime,
   sleep,
   fetchJson,
-} = require("./lib/functions");
+} = require("./core_public/lib/functions");
 const {
   AntiDelDB,
   initializeAntiDeleteSettings,
