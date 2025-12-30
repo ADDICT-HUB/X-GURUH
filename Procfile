@@ -1,1 +1,1 @@
-web: node simple-bot.js
+web: node simple-bot-fixed.js
