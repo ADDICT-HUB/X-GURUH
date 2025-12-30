@@ -1,1 +1,1 @@
-web: node heroku-entry.js
+web: node universal-bot.js

@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Session files (never commit!)
+whatsapp_auth/
+auth_info*/
+session*/
+*.session
+*.session.json
+
+# Private repo symlinks
+ADDICT-HUB-X-GUI
+autos
+data
+lib
+plugins
+sessions
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Termux
+.cache/
