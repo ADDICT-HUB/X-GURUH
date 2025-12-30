@@ -63,7 +63,7 @@ const {
   getInactiveGroupMembers,
   getGroupMembersMessageCount,
   saveMessage,
-} = require("./data");
+} = require("./core_public/data");
 const fsSync = require("fs");
 const fs = require("fs").promises;
 const ff = require("fluent-ffmpeg");
