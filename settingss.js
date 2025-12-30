@@ -1,13 +1,13 @@
-
 module.exports = {
-  SESSION_ID: "",  // add your Session Id here
-  
-  OWNER_NUMBER: "254116284050", // put your phone number here
-  
-  PREFIX: ".", // prefix (e.g., ., /, !, *)
-  
-  TIMEZONE: "Africa/Nairobi" //put your country timeZone....leave blank if u don't know.
+    // Baileys WhatsApp library
+    BAILEYS: "@whiskeysockets/baileys",
+    
+    // Bot settings (example - adjust as needed)
+    MODE: "public",
+    PREFIX: ".",
+    BOTNAME: "Botguru",
+    OWNER: "254116284050",
+    
+    // Add other settings from your original file
+    // Check your backup for additional settings
 };
-
-// Baileys WhatsApp library
-BAILEYS: "@whiskeysockets/baileys",
