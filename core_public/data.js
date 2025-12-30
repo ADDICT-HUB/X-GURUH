@@ -1,31 +1,33 @@
-// Data module for Heroku deployment
-// Provides minimal data structures to prevent errors
-
+// Data module stub for Heroku
 module.exports = {
-    // Common data structures
-    users: {},
-    groups: {},
-    settings: {},
-    commands: {},
+    // Data storage
+    store: {},
     
     // Methods
     get: function(key) {
-        return this[key];
+        return this.store[key];
     },
     
     set: function(key, value) {
-        this[key] = value;
+        this.store[key] = value;
+        return true;
+    },
+    
+    delete: function(key) {
+        delete this.store[key];
         return true;
     },
     
     has: function(key) {
-        return key in this;
+        return key in this.store;
     },
     
-    delete: function(key) {
-        delete this[key];
+    clear: function() {
+        this.store = {};
         return true;
     },
     
-    // Add more data methods as needed
+    getAll: function() {
+        return this.store;
+    }
 };
